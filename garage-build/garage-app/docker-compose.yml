@@ -1,0 +1,14 @@
+services:
+  garage:
+    container_name: garage
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8765:3000"
+    volumes:
+      - /mnt/user/appdata/garage:/data
+      - ./frontend:/app/frontend
+    environment:
+      - TZ=Asia/Riyadh
+      - PORT=3000
+      - DATA_DIR=/data

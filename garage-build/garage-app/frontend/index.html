@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Garage</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg: #0a0a0c;
+  --surface: #131316;
+  --surface-hi: #1c1c21;
+  --surface-lo: #08080a;
+  --line: #26262d;
+  --line-hi: #3a3a44;
+  --text: #f5f5f7;
+  --text-2: #a8a8b3;
+  --text-3: #626270;
+  --accent: #ff5722;
+  --accent-deep: #c43d12;
+  --good: #34d399;
+  --warn: #fbbf24;
+  --bad: #ef4444;
+  --info: #60a5fa;
+  --purple: #a78bfa;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --display: 'Instrument Serif', Georgia, serif;
+  --sans: 'Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+html { height: 100%; background: var(--bg); -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { min-height: 100%; background: var(--bg); background-image: radial-gradient(ellipse at top right, rgba(255, 87, 34, 0.06), transparent 50%), radial-gradient(ellipse at bottom left, rgba(96, 165, 250, 0.04), transparent 50%); background-attachment: fixed; color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5; letter-spacing: -0.01em; overscroll-behavior-y: none; }
+
+button, input, select, textarea { font: inherit; color: inherit; background: transparent; border: 0; outline: 0; }
+button { cursor: pointer; user-select: none; }
+input, textarea, select { user-select: text; }
+a { color: inherit; text-decoration: none; }
+
+.app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+
+/* ─── Auth screen ──────────────────────────── */
+.auth-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  padding-top: calc(32px + var(--safe-top));
+  padding-bottom: calc(32px + var(--safe-bottom));
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-lo) 100%);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -30%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255, 87, 34, 0.15), transparent 60%);
+  pointer-events: none;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.auth-brand-mark {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  display: grid; place-items: center;
+  color: #fff; font-weight: 800; font-size: 22px;
+  box-shadow: 0 8px 24px rgba(255, 87, 34, 0.4);
+}
+
+.auth-brand-text {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+}
+
+.auth-title {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 36px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.auth-subtitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.auth-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--bad);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  font-family: var(--mono);
+}
+
+.auth-foot {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  position: relative;
+}
+
+/* ─── Topbar (in-app) ──────────────────────── */
+.topbar { position: sticky; top: 0; z-index: 50; padding-top: var(--safe-top); background: rgba(10, 10, 12, 0.8); backdrop-filter: saturate(180%) blur(24px); -webkit-backdrop-filter: saturate(180%) blur(24px); border-bottom: 1px solid var(--line); }
+.topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 20px; max-width: 720px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 24px; font-style: italic; letter-spacing: -0.01em; color: var(--text); }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); display: grid; place-items: center; color: #fff; font-family: var(--sans); font-style: normal; font-weight: 800; font-size: 16px; box-shadow: 0 6px 20px rgba(255, 87, 34, 0.35); }
+.car-pill { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 500; max-width: 50%; position: relative; cursor: pointer; }
+.car-pill::after { content: '⌄'; font-size: 14px; color: var(--text-3); margin-top: -4px; }
+.car-pill select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.car-pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tabs { position: sticky; top: calc(60px + var(--safe-top)); z-index: 49; display: flex; background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; padding: 0 12px; max-width: 720px; margin: 0 auto; width: 100%; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 auto; padding: 14px 16px; font-size: 14px; font-weight: 600; color: var(--text-3); white-space: nowrap; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+.main { flex: 1; padding: 20px 20px calc(120px + var(--safe-bottom)); max-width: 720px; margin: 0 auto; width: 100%; }
+
+.hero { background: linear-gradient(180deg, var(--surface) 0%, var(--surface-lo) 100%); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: -40%; right: -20%; width: 280px; height: 280px; background: radial-gradient(circle, rgba(255, 87, 34, 0.18), transparent 60%); pointer-events: none; }
+.hero-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-3); margin-bottom: 8px; }
+.hero-value { display: flex; align-items: baseline; gap: 6px; font-family: var(--display); font-style: italic; font-size: 56px; line-height: 1; color: var(--text); letter-spacing: -0.02em; }
+.hero-value .unit { font-family: var(--mono); font-style: normal; font-size: 14px; font-weight: 500; color: var(--text-2); }
+.hero-meta { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-family: var(--mono); }
+.hero-meta-item { padding: 10px 0 0; border-top: 1px solid var(--line); }
+.hero-meta-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-3); margin-bottom: 4px; }
+.hero-meta-value { font-size: 18px; font-weight: 600; color: var(--text); }
+.hero-meta-value.warn { color: var(--warn); }
+.hero-meta-value.bad { color: var(--bad); }
+.hero-meta-value.good { color: var(--good); }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px 20px; padding: 0 20px 4px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: 0 0 auto; padding: 8px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; transition: all 0.15s; }
+.chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.section-h { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 12px; }
+.section-h:first-child { margin-top: 0; }
+.section-title { font-family: var(--display); font-style: italic; font-size: 22px; letter-spacing: -0.01em; color: var(--text); }
+.section-count { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text-3); background: var(--surface); border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; margin-bottom: 8px; transition: all 0.15s; overflow: hidden; display: block; width: 100%; }
+.card:active { transform: scale(0.985); border-color: var(--line-hi); }
+.card-row { display: flex; align-items: center; gap: 14px; padding: 16px; width: 100%; text-align: left; min-height: 64px; }
+
+.lamp { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); }
+.lamp-good { background: var(--good); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 12px rgba(52, 211, 153, 0.4); }
+.lamp-warn { background: var(--warn); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 12px rgba(251, 191, 36, 0.5); animation: glow-warn 2.5s ease-in-out infinite; }
+.lamp-bad { background: var(--bad); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 14px rgba(239, 68, 68, 0.6); animation: glow-bad 1.4s ease-in-out infinite; }
+.lamp-off { background: var(--text-3); }
+.lamp-purple { background: var(--purple); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 10px rgba(167, 139, 250, 0.4); }
+
+@keyframes glow-warn { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 0 12px rgba(251, 191, 36, 0.5); } 50% { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 0 18px rgba(251, 191, 36, 0.8); } }
+@keyframes glow-bad { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 0 14px rgba(239, 68, 68, 0.6); } 50% { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25), 0 0 22px rgba(239, 68, 68, 0.9); } }
+
+.card-info { flex: 1; min-width: 0; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.card-meta { display: flex; flex-wrap: wrap; gap: 8px 12px; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.card-meta b { color: var(--text-2); font-weight: 500; }
+.card-arrow { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; color: var(--text-3); font-size: 18px; transition: transform 0.15s, color 0.15s; }
+.card:active .card-arrow { transform: translateX(3px); color: var(--text); }
+
+.user-tag { font-family: var(--mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; padding: 3px 7px; border-radius: 4px; background: var(--surface-hi); color: var(--text-2); }
+.user-tag.admin { background: rgba(255, 87, 34, 0.15); color: var(--accent); }
+
+.reminder { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02)); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 16px; padding: 18px; margin-bottom: 10px; }
+.reminder.warn { background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.02)); border-color: rgba(251, 191, 36, 0.25); }
+.reminder-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.reminder-tag { font-family: var(--mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; padding: 4px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.2); color: var(--bad); }
+.reminder.warn .reminder-tag { background: rgba(251, 191, 36, 0.2); color: var(--warn); }
+.reminder-name { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.reminder-meta { font-family: var(--mono); font-size: 12px; color: var(--text-2); margin-bottom: 14px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; transition: transform 0.1s, background 0.15s, opacity 0.15s; min-height: 48px; white-space: nowrap; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 24px rgba(255, 87, 34, 0.3); }
+.btn-primary:active { background: var(--accent-deep); }
+.btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+.btn-danger { background: var(--bad); color: #fff; }
+.btn-block { width: 100%; }
+.btn-sm { padding: 8px 14px; min-height: 36px; font-size: 13px; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }
+
+.fab { position: fixed; right: 20px; bottom: calc(28px + var(--safe-bottom)); width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 32px; font-weight: 300; z-index: 40; box-shadow: 0 10px 30px rgba(255, 87, 34, 0.45), 0 4px 10px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+.fab:active { transform: scale(0.92); }
+
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.25s; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet { position: relative; width: 100%; max-width: 560px; max-height: 92dvh; background: var(--surface); border-top-left-radius: 24px; border-top-right-radius: 24px; border: 1px solid var(--line); border-bottom: none; padding: 12px 20px calc(20px + var(--safe-bottom)); overflow-y: auto; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0.35, 1); -webkit-overflow-scrolling: touch; }
+.sheet-backdrop.open .sheet { transform: translateY(0); }
+
+@media (min-width: 600px) {
+  .sheet-backdrop { align-items: center; }
+  .sheet { border-radius: 24px; border: 1px solid var(--line); max-height: 84dvh; margin: 20px; transform: translateY(20px) scale(0.96); opacity: 0; transition: transform 0.25s cubic-bezier(0.32, 0.72, 0.35, 1), opacity 0.25s; }
+  .sheet-backdrop.open .sheet { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.sheet-handle { width: 40px; height: 5px; background: var(--line-hi); border-radius: 100px; margin: 4px auto 18px; }
+.sheet-title { font-family: var(--display); font-style: italic; font-size: 30px; letter-spacing: -0.02em; margin-bottom: 4px; line-height: 1.1; }
+.sheet-subtitle { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-3); margin-bottom: 24px; }
+
+.field { margin-bottom: 14px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-label { display: block; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-3); margin-bottom: 8px; }
+.field-input, .field-select, .field-textarea { width: 100%; background: var(--surface-hi); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: 16px; color: var(--text); transition: border-color 0.15s, background 0.15s; -webkit-appearance: none; appearance: none; }
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--accent); background: var(--surface); }
+.field-textarea { min-height: 90px; resize: vertical; font-family: inherit; }
+.field-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a8a8b3' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 36px; }
+.field-checkbox { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface-hi); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; font-size: 14px; margin-bottom: 14px; }
+.field-checkbox input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+
+.log { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+.log-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); }
+.log-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.log-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+.log-notes { font-size: 13px; color: var(--text-2); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.log-photos { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.log-photo { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; }
+
+.empty { text-align: center; padding: 48px 20px; color: var(--text-3); }
+.empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.6; }
+.empty-text { font-family: var(--display); font-style: italic; font-size: 18px; color: var(--text-2); }
+
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; width: 100%; text-align: left; }
+.setting-text { flex: 1; min-width: 0; }
+.setting-name { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.setting-desc { font-size: 12px; color: var(--text-3); margin-top: 2px; font-family: var(--mono); }
+
+.toast { position: fixed; left: 50%; bottom: calc(100px + var(--safe-bottom)); transform: translateX(-50%) translateY(20px); z-index: 200; background: var(--surface-hi); border: 1px solid var(--line-hi); color: var(--text); padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4); max-width: 90vw; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.bad { border-color: rgba(239, 68, 68, 0.4); }
+.toast.good { border-color: rgba(52, 211, 153, 0.4); }
+
+.loading { display: flex; align-items: center; justify-content: center; padding: 60px 0; color: var(--text-3); font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.boot { display: flex; align-items: center; justify-content: center; min-height: 100vh; min-height: 100dvh; color: var(--text-3); font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; }
+
+@media (max-width: 380px) {
+  .hero-value { font-size: 44px; }
+  .hero-meta { gap: 8px; }
+  .hero-meta-value { font-size: 16px; }
+  .auth-title { font-size: 30px; }
+}
+
+/* ─── Today's date ──────────────────────────── */
+.today-banner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 2px;
+}
+
+.today-day {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.today-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+}
+
+/* ─── Car hero card ──────────────────────────── */
+.car-hero {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  background: linear-gradient(160deg, #2a2d33 0%, #1a1c20 50%, #0f1014 100%);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.car-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 80% 30%, rgba(180, 195, 215, 0.12), transparent 50%),
+    radial-gradient(ellipse at 20% 70%, rgba(255, 87, 34, 0.08), transparent 50%);
+  pointer-events: none;
+}
+
+.car-hero-top {
+  position: relative;
+  padding: 18px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.car-hero-rings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.car-hero-rings svg { display: block; }
+
+.car-hero-make {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.car-hero-trim {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  padding: 5px 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.car-hero-photo-wrap {
+  position: relative;
+  margin: 0 -1px;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.2));
+  overflow: hidden;
+}
+
+.car-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.car-hero-svg {
+  width: 92%;
+  max-width: 520px;
+  height: auto;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.6));
+}
+
+.car-hero-photo-edit {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.car-hero-name {
+  position: relative;
+  padding: 4px 20px 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.car-hero-color {
+  position: relative;
+  padding: 6px 20px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6e7480, #3a3e44);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 1px var(--line);
+}
+
+/* ─── Power cards (Stock + Stage 1) ──────────────── */
+.power-grid {
+  position: relative;
+  padding: 0 14px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.power-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.power-card.stage1 {
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.12), rgba(255, 87, 34, 0.04));
+  border-color: rgba(255, 87, 34, 0.3);
+}
+
+.power-card.stage1::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 87, 34, 0.1), transparent);
+  animation: shine 4s ease-in-out infinite;
+}
+@keyframes shine {
+  0% { left: -100%; }
+  60%, 100% { left: 100%; }
+}
+
+.power-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.power-card.stage1 .power-tag {
+  color: var(--accent);
+}
+
+.power-pending {
+  font-size: 8px;
+  background: rgba(255, 87, 34, 0.2);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.12em;
+}
+
+.power-value {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.power-value .unit {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.power-secondary {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.power-secondary b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (max-width: 380px) {
+  .power-value { font-size: 26px; }
+  .car-hero-name { font-size: 24px; }
+}
+
+/* ─── Fuel & charts ─── */
+.fuel-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--info);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.fuel-card.partial { border-left-color: var(--text-3); }
+
+.fuel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+}
+
+.fuel-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.fuel-liters {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.fuel-cost {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.fuel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.fuel-meta b { color: var(--text); font-weight: 600; }
+.fuel-meta .economy { color: var(--good); }
+
+/* Inline SVG bar chart */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chart-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+
+.chart-svg { width: 100%; display: block; }
+
+.chart-legend {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* Template card */
+.template-card {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(96, 165, 250, 0.02));
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.template-name {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.template-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+.template-items-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.template-pill {
+  font-size: 11px;
+  background: var(--surface-hi);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--text-2);
+}
+
+.template-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.template-cost {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--info);
+  font-weight: 600;
+}
+
+.checkbox-list {
+  max-height: 50dvh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-hi);
+  padding: 4px;
+  margin-bottom: 14px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.checkbox-row:hover { background: var(--surface); }
+
+.checkbox-row input[type=checkbox] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.checkbox-row label {
+  flex: 1;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.checkbox-row .cost-input {
+  width: 80px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: right;
+}
+</style>
+</head>
+<body>
+
+<div id="root"><div class="boot">Loading…</div></div>
+
+<button class="fab" id="fab" data-action="quick-log" aria-label="Quick log" style="display:none;">+</button>
+
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+
+const state = {
+  authStatus: null,
+  cars: [],
+  currentCarId: null,
+  items: [],
+  tab: 'upcoming',
+  filter: 'all',
+};
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (n) => Number(n || 0).toLocaleString();
+
+async function api(path, opts = {}) {
+  try {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    if (res.status === 401) {
+      // session lost — re-show login
+      state.authStatus = { has_users: true, authenticated: false, user: null };
+      renderAuthScreen();
+      throw new Error('Not authenticated');
+    }
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      let msg = `${res.status}`;
+      try { const j = JSON.parse(txt); if (j.error) msg = j.error; } catch {}
+      throw new Error(msg);
+    }
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('json') ? res.json() : res;
+  } catch (err) {
+    console.error('[api]', path, err);
+    throw err;
+  }
+}
+
+function toast(msg, type = '') {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function openSheet(html) {
+  $('#sheet').innerHTML = '<div class="sheet-handle"></div>' + html;
+  $('#sheetBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  $('#sheetBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+$('#sheetBackdrop').addEventListener('click', (e) => {
+  if (e.target === $('#sheetBackdrop')) closeSheet();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+window.addEventListener('error', (e) => {
+  console.error('[error]', e.error || e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('[reject]', e.reason);
+});
+
+// ─── Single delegated click handler ─────────────────────
+document.addEventListener('click', async (e) => {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+
+  const action = target.dataset.action;
+  const id = target.dataset.id ? parseInt(target.dataset.id) : null;
+
+  try {
+    if (action === 'close') closeSheet();
+    else if (action === 'tab') switchTab(target.dataset.tab);
+    else if (action === 'chip') { state.filter = target.dataset.cat; render(); }
+    else if (action === 'item') openItemSheet(id);
+    else if (action === 'log') openLogSheet(id);
+    else if (action === 'quick-log') openQuickLogSheet();
+    else if (action === 'add-car') openAddCarSheet();
+    else if (action === 'edit-car') openEditCarSheet(id);
+    else if (action === 'update-km') openUpdateKmSheet();
+    else if (action === 'delete-log') deleteLog(id);
+    else if (action === 'create-first-car') submitFirstCar();
+    else if (action === 'submit-add-car') submitAddCar();
+    else if (action === 'submit-edit-car') submitEditCar(id);
+    else if (action === 'submit-delete-car') submitDeleteCar(id);
+    else if (action === 'submit-log') submitLog(id);
+    else if (action === 'submit-update-km') submitUpdateKm();
+    else if (action === 'pick-quick-log') { closeSheet(); setTimeout(() => openLogSheet(id), 250); }
+    else if (action === 'open-photo') window.open(target.dataset.src, '_blank');
+    else if (action === 'save-part-number') savePartNumber(id);
+    else if (action === 'refresh-schedule') refreshSchedule();
+    else if (action === 'edit-car-photo') openCarPhotoSheet(id);
+    else if (action === 'submit-car-photo') submitCarPhoto(id);
+    else if (action === 'delete-car-photo') deleteCarPhoto(id);
+    // Fuel actions
+    else if (action === 'add-fuel') openAddFuelSheet();
+    else if (action === 'submit-fuel') submitFuel();
+    else if (action === 'delete-fuel') deleteFuel(id);
+    // Template actions
+    else if (action === 'open-templates') openTemplatesSheet();
+    else if (action === 'add-template') openAddTemplateSheet();
+    else if (action === 'submit-template') submitTemplate();
+    else if (action === 'use-template') openApplyTemplateSheet(id);
+    else if (action === 'submit-apply-template') submitApplyTemplate(id);
+    else if (action === 'delete-template') deleteTemplate(id);
+    // Item edit (intervals)
+    else if (action === 'save-intervals') saveIntervals(id);
+    // Auth actions
+    else if (action === 'submit-login') submitLogin();
+    else if (action === 'submit-register') submitRegister();
+    else if (action === 'logout') logout();
+    else if (action === 'change-password') openChangePasswordSheet();
+    else if (action === 'submit-change-password') submitChangePassword();
+    else if (action === 'manage-users') openManageUsersSheet();
+    else if (action === 'add-user') openAddUserSheet();
+    else if (action === 'submit-add-user') submitAddUser();
+    else if (action === 'reset-user-password') openResetUserPasswordSheet(id);
+    else if (action === 'submit-reset-user-password') submitResetUserPassword(id);
+    else if (action === 'delete-user') deleteUser(id);
+  } catch (err) {
+    if (err.message !== 'Not authenticated') {
+      toast(err.message || 'Something went wrong', 'bad');
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// Boot
+// ═══════════════════════════════════════════════════
+async function boot() {
+  try {
+    state.authStatus = await api('/api/auth/status');
+  } catch (err) {
+    $('#root').innerHTML = `<div class="boot" style="color:var(--bad);">Cannot reach server</div>`;
+    return;
+  }
+
+  if (!state.authStatus.authenticated) {
+    renderAuthScreen();
+    return;
+  }
+  await initApp();
+}
+
+// ═══════════════════════════════════════════════════
+// Auth screens
+// ═══════════════════════════════════════════════════
+function renderAuthScreen() {
+  if (!state.authStatus.has_users) {
+    renderRegisterScreen();
+  } else {
+    renderLoginScreen();
+  }
+  $('#fab').style.display = 'none';
+}
+
+function renderLoginScreen() {
+  $('#root').innerHTML = `
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="auth-brand-mark">G</div>
+          <div class="auth-brand-text">Garage</div>
+        </div>
+        <div class="auth-title">Welcome back.</div>
+        <div class="auth-subtitle">Sign in to continue</div>
+        <div id="authError"></div>
+        <div class="field">
+          <label class="field-label">Username</label>
+          <input class="field-input" id="login_user" autocomplete="username" autocapitalize="none" autocorrect="off">
+        </div>
+        <div class="field">
+          <label class="field-label">Password</label>
+          <input class="field-input" id="login_pass" type="password" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary btn-block" data-action="submit-login" id="loginBtn">Sign in</button>
+      </div>
+    </div>
+  `;
+  setTimeout(() => $('#login_user')?.focus(), 100);
+  // Allow Enter to submit
+  ['login_user', 'login_pass'].forEach(id => {
+    $('#' + id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitLogin();
+    });
+  });
+}
+
+function renderRegisterScreen() {
+  $('#root').innerHTML = `
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="auth-brand-mark">G</div>
+          <div class="auth-brand-text">Garage</div>
+        </div>
+        <div class="auth-title">Create your account.</div>
+        <div class="auth-subtitle">First user becomes admin</div>
+        <div id="authError"></div>
+        <div class="field">
+          <label class="field-label">Username</label>
+          <input class="field-input" id="reg_user" autocomplete="username" autocapitalize="none" autocorrect="off" placeholder="3+ characters, letters/numbers">
+        </div>
+        <div class="field">
+          <label class="field-label">Password</label>
+          <input class="field-input" id="reg_pass" type="password" autocomplete="new-password" placeholder="Minimum 6 characters">
+        </div>
+        <div class="field">
+          <label class="field-label">Confirm Password</label>
+          <input class="field-input" id="reg_pass2" type="password" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary btn-block" data-action="submit-register" id="regBtn">Create account</button>
+        <div class="auth-foot">You'll be the admin · Can add other users later</div>
+      </div>
+    </div>
+  `;
+  setTimeout(() => $('#reg_user')?.focus(), 100);
+  ['reg_user', 'reg_pass', 'reg_pass2'].forEach(id => {
+    $('#' + id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitRegister();
+    });
+  });
+}
+
+function showAuthError(msg) {
+  const el = $('#authError');
+  if (el) el.innerHTML = `<div class="auth-error">${esc(msg)}</div>`;
+}
+
+async function submitLogin() {
+  const username = $('#login_user').value.trim();
+  const password = $('#login_pass').value;
+  if (!username || !password) { showAuthError('Enter username and password'); return; }
+
+  const btn = $('#loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  try {
+    const result = await api('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    state.authStatus = { has_users: true, authenticated: true, user: result.user };
+    await initApp();
+  } catch (err) {
+    showAuthError(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+  }
+}
+
+async function submitRegister() {
+  const username = $('#reg_user').value.trim();
+  const password = $('#reg_pass').value;
+  const confirm = $('#reg_pass2').value;
+  if (password !== confirm) { showAuthError('Passwords do not match'); return; }
+  if (password.length < 6) { showAuthError('Password must be at least 6 characters'); return; }
+  if (username.length < 3) { showAuthError('Username must be at least 3 characters'); return; }
+
+  const btn = $('#regBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
+  try {
+    const result = await api('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    state.authStatus = { has_users: true, authenticated: true, user: result.user };
+    await initApp();
+  } catch (err) {
+    showAuthError(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Create account';
+  }
+}
+
+async function logout() {
+  if (!confirm('Sign out?')) return;
+  try {
+    await api('/api/auth/logout', { method: 'POST' });
+  } catch {}
+  localStorage.removeItem('currentCarId');
+  state.cars = [];
+  state.currentCarId = null;
+  state.items = [];
+  state.authStatus = { has_users: true, authenticated: false, user: null };
+  renderAuthScreen();
+}
+
+// ═══════════════════════════════════════════════════
+// App init (post-login)
+// ═══════════════════════════════════════════════════
+async function initApp() {
+  // Render the app shell
+  $('#root').innerHTML = `
+    <div class="app">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <div class="brand-mark">G</div>
+            <span>Garage</span>
+          </div>
+          <div class="car-pill" id="carPill" style="display:none;">
+            <span class="car-pill-name" id="carName">—</span>
+            <select id="carSelect" aria-label="Switch vehicle"></select>
+          </div>
+        </div>
+      </header>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-action="tab" data-tab="upcoming">Upcoming</button>
+        <button class="tab" data-action="tab" data-tab="schedule">Schedule</button>
+        <button class="tab" data-action="tab" data-tab="due">Due</button>
+        <button class="tab" data-action="tab" data-tab="fuel">Fuel</button>
+        <button class="tab" data-action="tab" data-tab="history">History</button>
+        <button class="tab" data-action="tab" data-tab="garage">Garage</button>
+        <button class="tab" data-action="tab" data-tab="settings">Settings</button>
+      </nav>
+
+      <main class="main" id="main"><div class="loading">Loading…</div></main>
+    </div>
+  `;
+
+  state.cars = await api('/api/cars');
+
+  if (state.cars.length === 0) {
+    $('#main').innerHTML = `<div class="empty"><div class="empty-icon">○</div><div class="empty-text">Welcome — add your first vehicle to begin</div></div>`;
+    showFirstRunSheet();
+    return;
+  }
+
+  const saved = parseInt(localStorage.getItem('currentCarId'));
+  state.currentCarId = state.cars.find(c => c.id === saved) ? saved : state.cars[0].id;
+  await loadCar();
+  $('#carPill').style.display = '';
+  renderCarPicker();
+}
+
+function renderCarPicker() {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  $('#carName').textContent = car ? car.name : '—';
+  const sel = $('#carSelect');
+  sel.innerHTML = state.cars.map(c =>
+    `<option value="${c.id}" ${c.id === state.currentCarId ? 'selected' : ''}>${esc(c.name)}</option>`
+  ).join('');
+  sel.onchange = async () => {
+    state.currentCarId = parseInt(sel.value);
+    localStorage.setItem('currentCarId', state.currentCarId);
+    await loadCar();
+    renderCarPicker();
+  };
+}
+
+async function loadCar() {
+  state.items = await api(`/api/cars/${state.currentCarId}/items`);
+  render();
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  render();
+}
+
+function lampClass(status) {
+  return ({ ok: 'lamp-good', due_soon: 'lamp-warn', overdue: 'lamp-bad', never: 'lamp-off', condition: 'lamp-purple' })[status] || 'lamp-off';
+}
+
+// ─── Audi 4-rings SVG (drawn from scratch, no copyright) ───
+const AUDI_RINGS_SVG = `
+  <svg width="64" height="20" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g fill="none" stroke="#e8e8ec" stroke-width="3">
+      <circle cx="30" cy="30" r="22"/>
+      <circle cx="70" cy="30" r="22"/>
+      <circle cx="110" cy="30" r="22"/>
+      <circle cx="150" cy="30" r="22"/>
+    </g>
+  </svg>
+`;
+
+// ─── Audi A6 C8 silhouette SVG (Daytona Grey gradient) ───
+// Stylized side-profile illustration - default when no photo uploaded
+const A6_SILHOUETTE_SVG = `
+  <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" class="car-hero-svg" aria-label="Audi A6 C8">
+    <defs>
+      <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#8c92a0"/>
+        <stop offset="40%" stop-color="#5a6068"/>
+        <stop offset="70%" stop-color="#3a3f48"/>
+        <stop offset="100%" stop-color="#23262c"/>
+      </linearGradient>
+      <linearGradient id="windowGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1a1d24"/>
+        <stop offset="100%" stop-color="#0a0c10"/>
+      </linearGradient>
+      <linearGradient id="wheelGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#52575f"/>
+        <stop offset="100%" stop-color="#1f2127"/>
+      </linearGradient>
+      <radialGradient id="shineGrad" cx="0.3" cy="0.2">
+        <stop offset="0%" stop-color="#c9ced8" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#c9ced8" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="bodyShadow">
+        <feGaussianBlur stdDeviation="3"/>
+      </filter>
+    </defs>
+
+    <!-- Ground shadow -->
+    <ellipse cx="300" cy="195" rx="240" ry="8" fill="#000" opacity="0.5" filter="url(#bodyShadow)"/>
+
+    <!-- Lower body / sills -->
+    <path d="M 60,170 L 80,150 L 130,140 L 470,140 L 530,148 L 545,165 L 540,175 L 60,175 Z"
+          fill="#1a1d22"/>
+
+    <!-- Main body -->
+    <path d="M 50,165
+             L 60,140
+             Q 70,130 95,128
+             L 130,125
+             Q 165,120 195,114
+             L 220,98
+             Q 240,82 275,78
+             L 360,78
+             Q 395,82 415,98
+             L 445,118
+             Q 480,124 510,130
+             Q 530,135 545,145
+             L 555,160
+             L 555,170
+             L 50,170 Z"
+          fill="url(#bodyGrad)"/>
+
+    <!-- Greenhouse / windows -->
+    <path d="M 200,108
+             L 225,86
+             Q 245,72 275,70
+             L 360,70
+             Q 390,72 410,86
+             L 440,108
+             L 425,112
+             L 240,112 Z"
+          fill="url(#windowGrad)"/>
+
+    <!-- Window pillar dividers -->
+    <line x1="285" y1="72" x2="280" y2="112" stroke="#0a0c10" stroke-width="2"/>
+    <line x1="345" y1="72" x2="350" y2="112" stroke="#0a0c10" stroke-width="2"/>
+
+    <!-- Body shine highlight -->
+    <path d="M 130,128 L 470,128 L 460,138 L 140,138 Z"
+          fill="url(#shineGrad)"/>
+
+    <!-- Door cut lines -->
+    <line x1="220" y1="118" x2="218" y2="160" stroke="#0a0c10" stroke-width="0.8" opacity="0.5"/>
+    <line x1="285" y1="118" x2="283" y2="160" stroke="#0a0c10" stroke-width="0.8" opacity="0.5"/>
+    <line x1="350" y1="118" x2="352" y2="160" stroke="#0a0c10" stroke-width="0.8" opacity="0.5"/>
+    <line x1="420" y1="118" x2="425" y2="160" stroke="#0a0c10" stroke-width="0.8" opacity="0.5"/>
+
+    <!-- Side character line -->
+    <path d="M 70,148 L 540,148" stroke="#c9ced8" stroke-width="0.6" opacity="0.3"/>
+
+    <!-- Headlight -->
+    <path d="M 60,138 L 75,135 L 78,148 L 60,150 Z" fill="#e8e8ec" opacity="0.85"/>
+    <path d="M 60,140 L 73,138 L 75,144 L 60,146 Z" fill="#fff8e1" opacity="0.8"/>
+
+    <!-- Tail light -->
+    <path d="M 540,140 L 555,142 L 553,158 L 540,156 Z" fill="#dc2626" opacity="0.85"/>
+
+    <!-- Front grille hint -->
+    <path d="M 50,160 L 65,160 L 65,168 L 50,168 Z" fill="#0a0c10"/>
+
+    <!-- Front wheel -->
+    <g>
+      <circle cx="145" cy="170" r="32" fill="#0a0c10"/>
+      <circle cx="145" cy="170" r="28" fill="url(#wheelGrad)"/>
+      <circle cx="145" cy="170" r="10" fill="#1a1d22"/>
+      <!-- Spokes -->
+      <g stroke="#3a3f48" stroke-width="2" stroke-linecap="round">
+        <line x1="145" y1="148" x2="145" y2="192"/>
+        <line x1="123" y1="170" x2="167" y2="170"/>
+        <line x1="129" y1="154" x2="161" y2="186"/>
+        <line x1="161" y1="154" x2="129" y2="186"/>
+      </g>
+      <circle cx="145" cy="170" r="4" fill="#52575f"/>
+    </g>
+
+    <!-- Rear wheel -->
+    <g>
+      <circle cx="455" cy="170" r="32" fill="#0a0c10"/>
+      <circle cx="455" cy="170" r="28" fill="url(#wheelGrad)"/>
+      <circle cx="455" cy="170" r="10" fill="#1a1d22"/>
+      <g stroke="#3a3f48" stroke-width="2" stroke-linecap="round">
+        <line x1="455" y1="148" x2="455" y2="192"/>
+        <line x1="433" y1="170" x2="477" y2="170"/>
+        <line x1="439" y1="154" x2="471" y2="186"/>
+        <line x1="471" y1="154" x2="439" y2="186"/>
+      </g>
+      <circle cx="455" cy="170" r="4" fill="#52575f"/>
+    </g>
+  </svg>
+`;
+
+function getTodayBanner() {
+  const now = new Date();
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayName = days[now.getDay()];
+  const dateStr = `${months[now.getMonth()]} ${now.getDate()} · ${now.getFullYear()}`;
+  return `
+    <div class="today-banner">
+      <div class="today-day">${dayName}</div>
+      <div class="today-date">${dateStr}</div>
+    </div>
+  `;
+}
+
+function renderCarHero(car) {
+  const photoUrl = car.photo_filename ? `/uploads/${esc(car.photo_filename)}` : null;
+  const make = car.make || 'Vehicle';
+  const showAudiRings = (make || '').toLowerCase().includes('audi');
+
+  // Power data
+  const stockHp = car.power_hp;
+  const stockNm = car.torque_nm;
+  const stockLbft = stockNm ? Math.round(stockNm * 0.7376) : null;
+  const tuneStage = car.tune_stage || 'Stage 1';
+  const tuneHp = car.tune_power_hp;
+  const tuneNm = car.tune_torque_nm;
+  const tuneLbft = tuneNm ? Math.round(tuneNm * 0.7376) : null;
+
+  // Color dot styling - try to match common car colors
+  const colorMap = {
+    'daytona grey': 'linear-gradient(135deg, #7a8090, #2c3038)',
+    'daytona': 'linear-gradient(135deg, #7a8090, #2c3038)',
+    'mythos black': 'linear-gradient(135deg, #1a1a1f, #000)',
+    'glacier white': 'linear-gradient(135deg, #f5f5f7, #d8d8de)',
+    'florett silver': 'linear-gradient(135deg, #c8ccd2, #8a8e94)',
+    'navarra blue': 'linear-gradient(135deg, #1a3a6e, #0a1a3a)',
+    'tango red': 'linear-gradient(135deg, #c8202a, #6e0e16)',
+  };
+  const colorKey = (car.color || '').toLowerCase();
+  let colorBg = 'linear-gradient(135deg, #6e7480, #3a3e44)';
+  for (const [key, val] of Object.entries(colorMap)) {
+    if (colorKey.includes(key)) { colorBg = val; break; }
+  }
+
+  return `
+    <div class="car-hero">
+      <div class="car-hero-bg"></div>
+
+      <div class="car-hero-top">
+        <div class="car-hero-rings">
+          ${showAudiRings ? AUDI_RINGS_SVG : ''}
+          <span class="car-hero-make">${esc(make)}</span>
+        </div>
+        ${car.trim ? `<div class="car-hero-trim">${esc(car.trim)}</div>` : ''}
+      </div>
+
+      <div class="car-hero-photo-wrap">
+        ${photoUrl
+          ? `<img src="${photoUrl}" class="car-hero-photo" alt="${esc(car.name)}">`
+          : A6_SILHOUETTE_SVG
+        }
+        <button class="car-hero-photo-edit" data-action="edit-car-photo" data-id="${car.id}">
+          ${photoUrl ? '✎ Change Photo' : '+ Add Photo'}
+        </button>
+      </div>
+
+      <div class="car-hero-name">${esc(car.model || car.name)}</div>
+      <div class="car-hero-color">
+        <span class="color-dot" style="background: ${colorBg};"></span>
+        <span>${esc(car.color || 'No color set')}${car.year ? ' · ' + car.year : ''}</span>
+      </div>
+
+      ${(stockHp || tuneHp) ? `
+        <div class="power-grid">
+          ${stockHp ? `
+            <div class="power-card">
+              <div class="power-tag">Stock</div>
+              <div class="power-value">${stockHp}<span class="unit">hp</span></div>
+              ${stockNm ? `<div class="power-secondary"><b>${stockNm}</b> Nm · <b>${stockLbft}</b> lb-ft</div>` : ''}
+            </div>
+          ` : '<div></div>'}
+
+          ${tuneHp ? `
+            <div class="power-card stage1">
+              <div class="power-tag">
+                <span>${esc(tuneStage)}</span>
+                <span class="power-pending">Planned</span>
+              </div>
+              <div class="power-value">${tuneHp}<span class="unit">hp</span></div>
+              ${tuneNm ? `<div class="power-secondary"><b>${tuneNm}</b> Nm · <b>${tuneLbft}</b> lb-ft</div>` : ''}
+            </div>
+          ` : `
+            <button class="power-card stage1" data-action="edit-car" data-id="${car.id}" style="cursor:pointer;text-align:left;width:100%;">
+              <div class="power-tag">
+                <span>Stage 1</span>
+                <span class="power-pending">+ Plan</span>
+              </div>
+              <div class="power-value" style="font-size:18px;color:var(--text-2);">Tap to add</div>
+            </button>
+          `}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function render() {
+  const main = $('#main');
+  $('#fab').style.display = 'none';
+  if (!state.currentCarId && state.cars.length === 0 && state.tab !== 'settings' && state.tab !== 'garage') return;
+  if (state.tab === 'schedule') renderSchedule(main);
+  else if (state.tab === 'upcoming') renderUpcoming(main);
+  else if (state.tab === 'due') renderDue(main);
+  else if (state.tab === 'fuel') renderFuel(main);
+  else if (state.tab === 'history') renderHistory(main);
+  else if (state.tab === 'garage') renderGarage(main);
+  else if (state.tab === 'settings') renderSettings(main);
+}
+
+function renderSchedule(main) {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  if (!car) {
+    main.innerHTML = `<div class="empty"><div class="empty-icon">○</div><div class="empty-text">No vehicle selected</div></div>`;
+    return;
+  }
+
+  const overdue = state.items.filter(i => i.status === 'overdue').length;
+  const dueSoon = state.items.filter(i => i.status === 'due_soon').length;
+  const ok = state.items.filter(i => i.status === 'ok').length;
+
+  const cats = ['all', ...new Set(state.items.map(i => i.category))];
+  const filtered = state.filter === 'all' ? state.items : state.items.filter(i => i.category === state.filter);
+  const grouped = {};
+  filtered.forEach(i => { (grouped[i.category] = grouped[i.category] || []).push(i); });
+
+  main.innerHTML = `
+    <div class="hero">
+      <div class="hero-label">Odometer</div>
+      <div class="hero-value">${fmt(car.current_km)}<span class="unit">km</span></div>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><div class="hero-meta-label">OK</div><div class="hero-meta-value good">${ok}</div></div>
+        <div class="hero-meta-item"><div class="hero-meta-label">Due</div><div class="hero-meta-value warn">${dueSoon}</div></div>
+        <div class="hero-meta-item"><div class="hero-meta-label">Overdue</div><div class="hero-meta-value bad">${overdue}</div></div>
+      </div>
+    </div>
+
+    <div class="chips">
+      ${cats.map(c => `<button class="chip ${c === state.filter ? 'active' : ''}" data-action="chip" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>
+
+    ${Object.keys(grouped).map(cat => `
+      <div class="section-h">
+        <div class="section-title">${esc(cat)}</div>
+        <div class="section-count">${grouped[cat].length}</div>
+      </div>
+      ${grouped[cat].map(it => itemCard(it)).join('')}
+    `).join('')}
+  `;
+
+  $('#fab').style.display = 'grid';
+}
+
+function itemCard(it) {
+  const meta = [];
+  if (it.part_number) meta.push(`<span><b>P/N</b> ${esc(it.part_number)}</span>`);
+  if (it.interval_km) meta.push(`<span><b>${fmt(it.interval_km)}</b> km</span>`);
+  if (it.last_service) meta.push(`<span><b>Last</b> ${fmt(it.last_service.odometer_km)}</span>`);
+  else if (!it.is_condition_based) meta.push(`<span style="color:var(--text-3)">Never logged</span>`);
+
+  return `
+    <button class="card" data-action="item" data-id="${it.id}">
+      <div class="card-row">
+        <div class="lamp ${lampClass(it.status)}"></div>
+        <div class="card-info">
+          <div class="card-title">${esc(it.name_en)}</div>
+          <div class="card-meta">${meta.join('')}</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </button>
+  `;
+}
+
+function renderDue(main) {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  if (!car) { main.innerHTML = `<div class="empty"><div class="empty-text">No vehicle</div></div>`; return; }
+  const overdue = state.items.filter(i => i.status === 'overdue');
+  const dueSoon = state.items.filter(i => i.status === 'due_soon');
+  const never = state.items.filter(i => i.status === 'never');
+
+  main.innerHTML = `
+    ${overdue.length === 0 && dueSoon.length === 0 ? `<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">All caught up</div></div>` : ''}
+    ${overdue.length > 0 ? `
+      <div class="section-h"><div class="section-title">Overdue</div><div class="section-count">${overdue.length}</div></div>
+      ${overdue.map(it => `
+        <div class="reminder">
+          <div class="reminder-top"><span class="reminder-tag">Overdue</span></div>
+          <div class="reminder-name">${esc(it.name_en)}</div>
+          <div class="reminder-meta">${it.next_due_km ? `Was due at ${fmt(it.next_due_km)} km — you're at ${fmt(car.current_km)} km` : 'Past due'}</div>
+          <button class="btn btn-primary btn-sm" data-action="log" data-id="${it.id}">Log Service</button>
+        </div>
+      `).join('')}
+    ` : ''}
+    ${dueSoon.length > 0 ? `
+      <div class="section-h"><div class="section-title">Due Soon</div><div class="section-count">${dueSoon.length}</div></div>
+      ${dueSoon.map(it => `
+        <div class="reminder warn">
+          <div class="reminder-top"><span class="reminder-tag">Soon</span></div>
+          <div class="reminder-name">${esc(it.name_en)}</div>
+          <div class="reminder-meta">Due at ${fmt(it.next_due_km)} km — ${fmt(it.next_due_km - car.current_km)} km remaining</div>
+          <button class="btn btn-ghost btn-sm" data-action="log" data-id="${it.id}">Log Now</button>
+        </div>
+      `).join('')}
+    ` : ''}
+    ${never.length > 0 ? `
+      <div class="section-h"><div class="section-title">Never Logged</div><div class="section-count">${never.length}</div></div>
+      ${never.map(it => itemCard(it)).join('')}
+    ` : ''}
+  `;
+}
+
+function renderUpcoming(main) {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  if (!car) {
+    main.innerHTML = `${getTodayBanner()}<div class="empty"><div class="empty-icon">○</div><div class="empty-text">Add your first vehicle to get started</div></div><div style="display:flex;justify-content:center;margin-top:20px;"><button class="btn btn-primary" data-action="add-car">+ Add Vehicle</button></div>`;
+    return;
+  }
+
+  const upcoming = state.items
+    .filter(i => i.next_due_km != null && i.status !== 'condition')
+    .map(i => ({ ...i, remaining: i.next_due_km - car.current_km }))
+    .sort((a, b) => a.remaining - b.remaining);
+
+  const buckets = [
+    { label: 'Overdue', filter: x => x.remaining < 0 },
+    { label: 'Next 5,000 km', filter: x => x.remaining >= 0 && x.remaining < 5000 },
+    { label: 'Next 10,000 km', filter: x => x.remaining >= 5000 && x.remaining < 10000 },
+    { label: 'Next 25,000 km', filter: x => x.remaining >= 10000 && x.remaining < 25000 },
+    { label: 'Next 50,000 km', filter: x => x.remaining >= 25000 && x.remaining < 50000 },
+    { label: 'Beyond 50,000 km', filter: x => x.remaining >= 50000 },
+  ];
+
+  // Service stacks — items due near same km
+  const stacks = {};
+  upcoming.forEach(it => {
+    if (it.remaining < 0) return;
+    const stackKey = Math.round(it.next_due_km / 5000) * 5000;
+    (stacks[stackKey] = stacks[stackKey] || []).push(it);
+  });
+  const meaningfulStacks = Object.entries(stacks).filter(([_, items]) => items.length >= 2);
+
+  const totalUpcomingCost = upcoming
+    .filter(i => i.last_service && i.last_service.cost && i.remaining < 50000 && i.remaining >= 0)
+    .reduce((s, i) => s + (i.last_service.cost || 0), 0);
+
+  main.innerHTML = `
+    ${getTodayBanner()}
+
+    ${renderCarHero(car)}
+
+    <div class="hero">
+      <div class="hero-label">Odometer</div>
+      <div class="hero-value">${fmt(car.current_km)}<span class="unit">km</span></div>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><div class="hero-meta-label">Upcoming</div><div class="hero-meta-value">${upcoming.filter(i => i.remaining >= 0 && i.remaining < 50000).length}</div></div>
+        <div class="hero-meta-item"><div class="hero-meta-label">Overdue</div><div class="hero-meta-value bad">${upcoming.filter(i => i.remaining < 0).length}</div></div>
+        ${totalUpcomingCost > 0 ? `<div class="hero-meta-item"><div class="hero-meta-label">Est. cost (50k)</div><div class="hero-meta-value">${fmt(totalUpcomingCost.toFixed(0))} SAR</div></div>` : ''}
+      </div>
+    </div>
+
+    ${meaningfulStacks.length > 0 ? `
+      <div class="section-h"><div class="section-title">Service Stacks</div><div class="section-count">at-once</div></div>
+      <div style="font-size:13px;color:var(--text-3);margin-bottom:12px;font-family:var(--mono);">Items due close together — bundle for one workshop visit</div>
+      ${meaningfulStacks
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .slice(0, 6)
+        .map(([km, items]) => {
+          const stackCost = items
+            .filter(i => i.last_service && i.last_service.cost)
+            .reduce((s, i) => s + i.last_service.cost, 0);
+          return `
+            <div class="reminder warn" style="margin-bottom:10px;">
+              <div class="reminder-top">
+                <span class="reminder-tag">@ ${fmt(km)} km</span>
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${items.length} services</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;">
+                ${items.map(i => `<span style="font-size:12px;background:var(--surface-hi);border:1px solid var(--line);padding:4px 10px;border-radius:6px;">${esc(i.name_en)}</span>`).join('')}
+              </div>
+              ${stackCost > 0 ? `<div class="reminder-meta">Est. ~${fmt(stackCost.toFixed(0))} SAR based on past costs</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+    ` : ''}
+
+    ${buckets.map(bucket => {
+      const items = upcoming.filter(bucket.filter);
+      if (items.length === 0) return '';
+      return `
+        <div class="section-h">
+          <div class="section-title">${bucket.label}</div>
+          <div class="section-count">${items.length}</div>
+        </div>
+        ${items.map(it => upcomingCard(it, car.current_km)).join('')}
+      `;
+    }).join('')}
+
+    ${upcoming.length === 0 ? '<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">Nothing scheduled</div></div>' : ''}
+  `;
+}
+
+function upcomingCard(it, currentKm) {
+  const remaining = it.remaining;
+  const overdue = remaining < 0;
+  const meta = [];
+  meta.push(`<span><b>at</b> ${fmt(it.next_due_km)} km</span>`);
+  if (overdue) meta.push(`<span style="color:var(--bad);"><b>${fmt(Math.abs(remaining))}</b> km past</span>`);
+  else meta.push(`<span><b>${fmt(remaining)}</b> km away</span>`);
+  if (it.last_service?.cost) meta.push(`<span><b>last cost</b> ${fmt(it.last_service.cost)} ${esc(it.last_service.currency || 'SAR')}</span>`);
+
+  return `
+    <button class="card" data-action="item" data-id="${it.id}">
+      <div class="card-row">
+        <div class="lamp ${lampClass(it.status)}"></div>
+        <div class="card-info">
+          <div class="card-title">${esc(it.name_en)}</div>
+          <div class="card-meta">${meta.join('')}</div>
+        </div>
+        <div class="card-arrow">›</div>
+      </div>
+    </button>
+  `;
+}
+
+async function renderHistory(main) {
+  if (!state.currentCarId) { main.innerHTML = `<div class="empty"><div class="empty-text">No vehicle</div></div>`; return; }
+  main.innerHTML = `<div class="loading">Loading history…</div>`;
+  const dash = await api(`/api/cars/${state.currentCarId}/dashboard`);
+
+  // Fetch all logs for chart aggregation (not just recent 10)
+  // We'll use the items endpoint data + need a per-month aggregation
+  // For simplicity, derive from recent_logs + add full log fetch
+  // Actually let's compute monthly from what we have on dashboard
+  // But dashboard only returns 10 — we need the chart to span all time
+  // Let me also fetch via items endpoint and aggregate
+
+  // Compute monthly cost from all items' last_service entries we have in state
+  // Better: do a dedicated query — but to keep it simple, just use recent_logs
+  // The chart will show the months covered by the recent 10 logs at minimum
+  const monthlyMap = {};
+  dash.recent_logs.forEach(l => {
+    const month = l.service_date.slice(0, 7);
+    if (!monthlyMap[month]) monthlyMap[month] = { month, cost: 0, count: 0 };
+    monthlyMap[month].cost += l.cost || 0;
+    monthlyMap[month].count += 1;
+  });
+  const monthly = Object.values(monthlyMap).sort((a, b) => a.month.localeCompare(b.month));
+  const currency = dash.recent_logs[0]?.currency || 'SAR';
+
+  // Category breakdown
+  const catMap = {};
+  dash.recent_logs.forEach(l => {
+    if (!catMap[l.category]) catMap[l.category] = 0;
+    catMap[l.category] += l.cost || 0;
+  });
+  const catTotal = Object.values(catMap).reduce((a, b) => a + b, 0);
+
+  main.innerHTML = `
+    <div class="hero">
+      <div class="hero-label">Total Spent (Service)</div>
+      <div class="hero-value">${fmt(dash.total_cost.toFixed(0))}<span class="unit">${currency}</span></div>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><div class="hero-meta-label">Logs</div><div class="hero-meta-value">${dash.recent_logs.length}</div></div>
+      </div>
+    </div>
+
+    ${monthly.length >= 2 ? renderMonthlyChart(monthly, 'Service Cost by Month', 'cost', currency) : ''}
+
+    ${catTotal > 0 ? `
+      <div class="chart-card">
+        <div class="chart-title">Spend by Category</div>
+        ${Object.entries(catMap).sort((a, b) => b[1] - a[1]).map(([cat, sum]) => {
+          const pct = (sum / catTotal) * 100;
+          return `
+            <div style="margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;margin-bottom:4px;">
+                <span style="color:var(--text-2);">${esc(cat)}</span>
+                <span style="color:var(--text);font-weight:600;">${fmt(sum.toFixed(0))} ${esc(currency)}</span>
+              </div>
+              <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:linear-gradient(90deg, var(--accent), var(--accent-deep));"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : ''}
+
+    <div class="section-h"><div class="section-title">Recent Service</div><div class="section-count">${dash.recent_logs.length}</div></div>
+    ${dash.recent_logs.length === 0 ? `<div class="empty"><div class="empty-icon">○</div><div class="empty-text">No service logged yet</div></div>` :
+      dash.recent_logs.map(l => `
+        <div class="log">
+          <div class="log-head"><span>${esc(l.service_date)}</span><span>${fmt(l.odometer_km)} km</span></div>
+          <div class="log-name">${esc(l.name_en)}</div>
+          <div class="log-meta">
+            <span>${fmt(l.cost)} ${esc(l.currency)}</span>
+            ${l.workshop ? `<span>· ${esc(l.workshop)}</span>` : ''}
+            <span>· ${esc(l.category)}</span>
+          </div>
+          ${l.notes ? `<div class="log-notes">${esc(l.notes)}</div>` : ''}
+        </div>
+      `).join('')}
+  `;
+}
+
+function renderGarage(main) {
+  main.innerHTML = `
+    <div class="section-h">
+      <div class="section-title">Vehicles</div>
+      <button class="btn btn-ghost btn-sm" data-action="add-car">+ Add</button>
+    </div>
+    ${state.cars.length === 0 ? `<div class="empty"><div class="empty-icon">○</div><div class="empty-text">No vehicles yet</div></div>` :
+      state.cars.map(c => `
+        <button class="card" data-action="edit-car" data-id="${c.id}">
+          <div class="card-row">
+            <div class="lamp ${c.id === state.currentCarId ? 'lamp-good' : 'lamp-off'}"></div>
+            <div class="card-info">
+              <div class="card-title">${esc(c.name)}</div>
+              <div class="card-meta">
+                ${c.year || c.make || c.model ? `<span>${esc(c.year || '')} ${esc(c.make || '')} ${esc(c.model || '')}</span>` : ''}
+                <span><b>${fmt(c.current_km)}</b> km</span>
+                ${c.plate ? `<span>${esc(c.plate)}</span>` : ''}
+              </div>
+            </div>
+            <div class="card-arrow">›</div>
+          </div>
+        </button>
+      `).join('')}
+  `;
+}
+
+function renderSettings(main) {
+  const me = state.authStatus.user;
+
+  main.innerHTML = `
+    <div class="section-h"><div class="section-title">Account</div></div>
+    <div class="setting">
+      <div class="setting-text">
+        <div class="setting-name">${esc(me.username)} ${me.is_admin ? '<span class="user-tag admin">Admin</span>' : ''}</div>
+        <div class="setting-desc">Signed in</div>
+      </div>
+    </div>
+    <button class="setting" data-action="change-password">
+      <div class="setting-text"><div class="setting-name">Change Password</div><div class="setting-desc">Update your password</div></div>
+      <div class="card-arrow">›</div>
+    </button>
+    <button class="setting" data-action="logout">
+      <div class="setting-text"><div class="setting-name" style="color:var(--bad);">Sign Out</div><div class="setting-desc">End this session</div></div>
+      <div class="card-arrow">›</div>
+    </button>
+
+    ${me.is_admin ? `
+      <div class="section-h"><div class="section-title">Administration</div></div>
+      <button class="setting" data-action="manage-users">
+        <div class="setting-text"><div class="setting-name">Manage Users</div><div class="setting-desc">Add, remove, reset passwords</div></div>
+        <div class="card-arrow">›</div>
+      </button>
+    ` : ''}
+
+    ${state.currentCarId ? `
+      <div class="section-h"><div class="section-title">Vehicle</div></div>
+      <button class="setting" data-action="update-km">
+        <div class="setting-text"><div class="setting-name">Update Odometer</div><div class="setting-desc">Set current km reading</div></div>
+        <div class="card-arrow">›</div>
+      </button>
+      <button class="setting" data-action="open-templates">
+        <div class="setting-text"><div class="setting-name">Service Templates</div><div class="setting-desc">Bundle services for one-tap logging</div></div>
+        <div class="card-arrow">›</div>
+      </button>
+      <button class="setting" data-action="add-fuel">
+        <div class="setting-text"><div class="setting-name">Quick Fill-Up Log</div><div class="setting-desc">Add a fuel fill-up</div></div>
+        <div class="card-arrow">⛽</div>
+      </button>
+      <button class="setting" data-action="refresh-schedule">
+        <div class="setting-text"><div class="setting-name">Refresh Audi Schedule</div><div class="setting-desc">Pull latest 2023 official intervals & part numbers</div></div>
+        <div class="card-arrow">↻</div>
+      </button>
+
+      <div class="section-h"><div class="section-title">Export</div></div>
+      <a class="setting" href="/api/cars/${state.currentCarId}/export.xlsx" download>
+        <div class="setting-text"><div class="setting-name">Excel Export</div><div class="setting-desc">Schedule + service log .xlsx</div></div>
+        <div class="card-arrow">↓</div>
+      </a>
+      <a class="setting" href="/api/cars/${state.currentCarId}/export.pdf" download>
+        <div class="setting-text"><div class="setting-name">PDF Report</div><div class="setting-desc">Service history report</div></div>
+        <div class="card-arrow">↓</div>
+      </a>
+    ` : ''}
+
+    <div class="section-h"><div class="section-title">App</div></div>
+    <div class="setting">
+      <div class="setting-text"><div class="setting-name">Install on Phone</div><div class="setting-desc">Share → Add to Home Screen</div></div>
+    </div>
+    <div class="setting">
+      <div class="setting-text"><div class="setting-name">Garage</div><div class="setting-desc">v2.3 · Self-hosted</div></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// Account: change password
+// ═══════════════════════════════════════════════════
+function openChangePasswordSheet() {
+  openSheet(`
+    <div class="sheet-title">Change Password</div>
+    <div class="sheet-subtitle">You'll be signed out</div>
+    <div class="field">
+      <label class="field-label">Current Password</label>
+      <input class="field-input" id="cp_old" type="password" autocomplete="current-password">
+    </div>
+    <div class="field">
+      <label class="field-label">New Password</label>
+      <input class="field-input" id="cp_new" type="password" autocomplete="new-password" placeholder="6+ characters">
+    </div>
+    <div class="field">
+      <label class="field-label">Confirm New Password</label>
+      <input class="field-input" id="cp_new2" type="password" autocomplete="new-password">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-change-password">Update</button>
+    </div>
+  `);
+}
+
+async function submitChangePassword() {
+  const oldP = $('#cp_old').value;
+  const newP = $('#cp_new').value;
+  const newP2 = $('#cp_new2').value;
+  if (newP !== newP2) { toast('Passwords do not match', 'bad'); return; }
+  if (newP.length < 6) { toast('Password too short', 'bad'); return; }
+
+  await api('/api/account/password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ old_password: oldP, new_password: newP }),
+  });
+  toast('Password changed — please sign in again', 'good');
+  closeSheet();
+  setTimeout(() => {
+    state.authStatus = { has_users: true, authenticated: false, user: null };
+    renderAuthScreen();
+  }, 800);
+}
+
+// ═══════════════════════════════════════════════════
+// Admin: manage users
+// ═══════════════════════════════════════════════════
+async function openManageUsersSheet() {
+  openSheet(`<div class="loading">Loading users…</div>`);
+  const users = await api('/api/users');
+
+  openSheet(`
+    <div class="sheet-title">Users</div>
+    <div class="sheet-subtitle">${users.length} total</div>
+    <button class="btn btn-primary btn-block" data-action="add-user" style="margin-bottom:18px;">+ Add User</button>
+
+    ${users.map(u => `
+      <div class="card" style="margin-bottom:8px;">
+        <div class="card-row">
+          <div class="lamp ${u.is_admin ? 'lamp-warn' : 'lamp-off'}"></div>
+          <div class="card-info">
+            <div class="card-title">${esc(u.username)} ${u.is_admin ? '<span class="user-tag admin">Admin</span>' : ''}</div>
+            <div class="card-meta">
+              <span><b>${u.car_count}</b> cars</span>
+              <span>· joined ${esc(u.created_at?.slice(0, 10) || '')}</span>
+              ${u.last_login ? `<span>· last ${esc(u.last_login.slice(0, 10))}</span>` : '<span>· never logged in</span>'}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:0 16px 14px;">
+          <button class="btn btn-ghost btn-sm" style="flex:1;" data-action="reset-user-password" data-id="${u.id}">Reset Password</button>
+          ${u.id !== state.authStatus.user.id ? `<button class="btn btn-danger btn-sm" data-action="delete-user" data-id="${u.id}">Delete</button>` : ''}
+        </div>
+      </div>
+    `).join('')}
+  `);
+}
+
+function openAddUserSheet() {
+  openSheet(`
+    <div class="sheet-title">Add User</div>
+    <div class="sheet-subtitle">Create a new account</div>
+    <div class="field">
+      <label class="field-label">Username</label>
+      <input class="field-input" id="nu_user" autocapitalize="none" autocomplete="off" placeholder="3+ characters">
+    </div>
+    <div class="field">
+      <label class="field-label">Initial Password</label>
+      <input class="field-input" id="nu_pass" type="text" autocomplete="off" placeholder="6+ characters">
+    </div>
+    <label class="field-checkbox">
+      <input type="checkbox" id="nu_admin">
+      <span>Admin (can manage users)</span>
+    </label>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-add-user">Create</button>
+    </div>
+  `);
+}
+
+async function submitAddUser() {
+  const username = $('#nu_user').value.trim();
+  const password = $('#nu_pass').value;
+  const isAdmin = $('#nu_admin').checked;
+
+  await api('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, is_admin: isAdmin }),
+  });
+  toast('User created', 'good');
+  openManageUsersSheet();
+}
+
+function openResetUserPasswordSheet(userId) {
+  openSheet(`
+    <div class="sheet-title">Reset Password</div>
+    <div class="sheet-subtitle">User will be signed out everywhere</div>
+    <div class="field">
+      <label class="field-label">New Password</label>
+      <input class="field-input" id="rp_new" type="text" autocomplete="off" placeholder="6+ characters">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-reset-user-password" data-id="${userId}">Reset</button>
+    </div>
+  `);
+}
+
+async function submitResetUserPassword(userId) {
+  const newP = $('#rp_new').value;
+  if (newP.length < 6) { toast('Password too short', 'bad'); return; }
+  await api(`/api/users/${userId}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_password: newP }),
+  });
+  toast('Password reset', 'good');
+  openManageUsersSheet();
+}
+
+async function deleteUser(userId) {
+  if (!confirm('Delete this user and all their data? This cannot be undone.')) return;
+  await api(`/api/users/${userId}`, { method: 'DELETE' });
+  toast('User deleted', 'good');
+  openManageUsersSheet();
+}
+
+// ═══════════════════════════════════════════════════
+// Sheets (cars, items, logs)
+// ═══════════════════════════════════════════════════
+function showFirstRunSheet() {
+  openSheet(`
+    <div class="sheet-title">Welcome</div>
+    <div class="sheet-subtitle">Add your first vehicle</div>
+    <div class="field"><label class="field-label">Nickname</label><input class="field-input" id="f_name" value="My Audi A6" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Make</label><input class="field-input" id="f_make" value="Audi" autocomplete="off"></div>
+      <div class="field"><label class="field-label">Model</label><input class="field-input" id="f_model" value="A6 C8 45 TFSI" autocomplete="off"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Year</label><input class="field-input" id="f_year" type="number" value="2023" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="0" inputmode="numeric"></div>
+    </div>
+    <label class="field-checkbox">
+      <input type="checkbox" id="f_seed" checked>
+      <span>Pre-load Audi A6 C8 45 TFSI service schedule</span>
+    </label>
+    <button class="btn btn-primary btn-block" data-action="create-first-car">Create Vehicle</button>
+  `);
+}
+
+async function submitFirstCar() {
+  const car = await api('/api/cars', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: $('#f_name').value.trim() || 'My Car',
+      make: $('#f_make').value.trim(),
+      model: $('#f_model').value.trim(),
+      year: parseInt($('#f_year').value) || null,
+      current_km: parseInt($('#f_km').value) || 0,
+      seed_audi: $('#f_seed').checked,
+    }),
+  });
+  state.cars = [car];
+  state.currentCarId = car.id;
+  localStorage.setItem('currentCarId', car.id);
+  closeSheet();
+  $('#carPill').style.display = '';
+  renderCarPicker();
+  await loadCar();
+  toast('Vehicle added', 'good');
+}
+
+function openAddCarSheet() {
+  openSheet(`
+    <div class="sheet-title">New Vehicle</div>
+    <div class="sheet-subtitle">Add to garage</div>
+    <div class="field"><label class="field-label">Nickname</label><input class="field-input" id="f_name" placeholder="e.g. Daily Driver" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Make</label><input class="field-input" id="f_make" autocomplete="off"></div>
+      <div class="field"><label class="field-label">Model</label><input class="field-input" id="f_model" autocomplete="off"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Year</label><input class="field-input" id="f_year" type="number" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="0" inputmode="numeric"></div>
+    </div>
+    <div class="field"><label class="field-label">Plate</label><input class="field-input" id="f_plate" autocomplete="off"></div>
+    <div class="field"><label class="field-label">VIN</label><input class="field-input" id="f_vin" autocomplete="off"></div>
+    <label class="field-checkbox"><input type="checkbox" id="f_seed"><span>Pre-load Audi A6 C8 schedule</span></label>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-add-car">Save</button>
+    </div>
+  `);
+}
+
+async function submitAddCar() {
+  const car = await api('/api/cars', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: $('#f_name').value.trim() || 'New Car',
+      make: $('#f_make').value.trim(),
+      model: $('#f_model').value.trim(),
+      year: parseInt($('#f_year').value) || null,
+      plate: $('#f_plate').value.trim(),
+      vin: $('#f_vin').value.trim(),
+      current_km: parseInt($('#f_km').value) || 0,
+      seed_audi: $('#f_seed').checked,
+    }),
+  });
+  state.cars.push(car);
+  if (!state.currentCarId) {
+    state.currentCarId = car.id;
+    localStorage.setItem('currentCarId', car.id);
+    $('#carPill').style.display = '';
+  }
+  closeSheet();
+  renderCarPicker();
+  await loadCar();
+  toast('Vehicle added', 'good');
+}
+
+function openEditCarSheet(carId) {
+  const c = state.cars.find(x => x.id === carId);
+  if (!c) return;
+  openSheet(`
+    <div class="sheet-title">${esc(c.name)}</div>
+    <div class="sheet-subtitle">Edit Vehicle</div>
+
+    <div class="field"><label class="field-label">Nickname</label><input class="field-input" id="f_name" value="${esc(c.name || '')}" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Make</label><input class="field-input" id="f_make" value="${esc(c.make || '')}" autocomplete="off"></div>
+      <div class="field"><label class="field-label">Model</label><input class="field-input" id="f_model" value="${esc(c.model || '')}" autocomplete="off"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Year</label><input class="field-input" id="f_year" type="number" value="${c.year || ''}" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Trim</label><input class="field-input" id="f_trim" value="${esc(c.trim || '')}" placeholder="Premium" autocomplete="off"></div>
+    </div>
+    <div class="field"><label class="field-label">Color</label><input class="field-input" id="f_color" value="${esc(c.color || '')}" placeholder="Daytona Grey Pearl" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="${c.current_km}" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Plate</label><input class="field-input" id="f_plate" value="${esc(c.plate || '')}" autocomplete="off"></div>
+    </div>
+    <div class="field"><label class="field-label">VIN</label><input class="field-input" id="f_vin" value="${esc(c.vin || '')}" autocomplete="off"></div>
+
+    <div class="section-h" style="margin:20px 0 12px;"><div class="section-title" style="font-size:18px;">Stock Power</div></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Horsepower</label><input class="field-input" id="f_hp" type="number" value="${c.power_hp || ''}" placeholder="261" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Torque (Nm)</label><input class="field-input" id="f_nm" type="number" value="${c.torque_nm || ''}" placeholder="370" inputmode="numeric"></div>
+    </div>
+
+    <div class="section-h" style="margin:20px 0 12px;"><div class="section-title" style="font-size:18px;">Tune (Planned)</div></div>
+    <div class="field"><label class="field-label">Stage Name</label><input class="field-input" id="f_stage" value="${esc(c.tune_stage || '')}" placeholder="Stage 1" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Tuned HP</label><input class="field-input" id="f_thp" type="number" value="${c.tune_power_hp || ''}" placeholder="330" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Tuned Nm</label><input class="field-input" id="f_tnm" type="number" value="${c.tune_torque_nm || ''}" placeholder="570" inputmode="numeric"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:20px;">
+      <button class="btn btn-danger" data-action="submit-delete-car" data-id="${carId}">Delete</button>
+      <button class="btn btn-primary" data-action="submit-edit-car" data-id="${carId}">Save</button>
+    </div>
+  `);
+}
+
+async function submitEditCar(carId) {
+  const updated = await api(`/api/cars/${carId}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: $('#f_name').value.trim(),
+      make: $('#f_make').value.trim(),
+      model: $('#f_model').value.trim(),
+      year: parseInt($('#f_year').value) || null,
+      plate: $('#f_plate').value.trim(),
+      vin: $('#f_vin').value.trim(),
+      current_km: parseInt($('#f_km').value) || 0,
+      color: $('#f_color').value.trim() || null,
+      trim: $('#f_trim').value.trim() || null,
+      power_hp: parseInt($('#f_hp').value) || null,
+      torque_nm: parseInt($('#f_nm').value) || null,
+      tune_stage: $('#f_stage').value.trim() || null,
+      tune_power_hp: parseInt($('#f_thp').value) || null,
+      tune_torque_nm: parseInt($('#f_tnm').value) || null,
+    }),
+  });
+  const idx = state.cars.findIndex(x => x.id === carId);
+  if (idx >= 0) state.cars[idx] = updated;
+  closeSheet();
+  renderCarPicker();
+  await loadCar();
+  toast('Saved', 'good');
+}
+
+async function submitDeleteCar(carId) {
+  const c = state.cars.find(x => x.id === carId);
+  if (!confirm(`Delete ${c.name}? This cannot be undone.`)) return;
+  await api(`/api/cars/${carId}`, { method: 'DELETE' });
+  state.cars = state.cars.filter(x => x.id !== carId);
+  if (state.currentCarId === carId) state.currentCarId = state.cars[0]?.id || null;
+  closeSheet();
+  if (state.cars.length === 0) {
+    $('#carPill').style.display = 'none';
+    showFirstRunSheet();
+  } else {
+    renderCarPicker();
+    await loadCar();
+  }
+}
+
+async function openItemSheet(itemId) {
+  const it = state.items.find(i => i.id === itemId);
+  if (!it) return;
+
+  openSheet(`<div class="loading">Loading…</div>`);
+  const logs = await api(`/api/items/${itemId}/logs`);
+
+  openSheet(`
+    <div class="sheet-title">${esc(it.name_en)}</div>
+    <div class="sheet-subtitle">${esc(it.category)}</div>
+    ${it.name_ar ? `<div style="font-size:15px;color:var(--text-2);margin-bottom:18px;direction:rtl;text-align:right;">${esc(it.name_ar)}</div>` : ''}
+
+    <div class="field">
+      <label class="field-label">Part Number</label>
+      <input class="field-input" id="pn_input" value="${esc(it.part_number || '')}" placeholder="(none)" autocomplete="off">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Interval (km)</label>
+        <input class="field-input" id="ikm_input" type="number" value="${it.interval_km || ''}" placeholder="—" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label class="field-label">Interval (months)</label>
+        <input class="field-input" id="imo_input" type="number" value="${it.interval_months || ''}" placeholder="—" inputmode="numeric">
+      </div>
+    </div>
+
+    <button class="btn btn-ghost btn-block" data-action="save-intervals" data-id="${itemId}" style="margin-bottom:16px;">Save Item Settings</button>
+
+    ${(it.next_due_km || it.next_due_date) ? `
+      <div class="hero" style="margin-bottom:18px;">
+        ${it.interval_km ? `
+          <div class="hero-label">Interval</div>
+          <div class="hero-value">${fmt(it.interval_km)}<span class="unit">km</span></div>
+        ` : it.interval_months ? `
+          <div class="hero-label">Interval</div>
+          <div class="hero-value">${it.interval_months}<span class="unit">months</span></div>
+        ` : ''}
+        <div class="hero-meta" style="margin-top:14px;">
+          ${it.next_due_km && it.status !== 'condition' ? `
+            <div class="hero-meta-item"><div class="hero-meta-label">Due (km)</div><div class="hero-meta-value">${fmt(it.next_due_km)}</div></div>
+          ` : ''}
+          ${it.next_due_date ? `
+            <div class="hero-meta-item">
+              <div class="hero-meta-label">Due (date)</div>
+              <div class="hero-meta-value ${it.days_until < 0 ? 'bad' : it.days_until < 30 ? 'warn' : ''}">${esc(it.next_due_date)}</div>
+            </div>
+          ` : ''}
+          ${it.days_until != null ? `
+            <div class="hero-meta-item">
+              <div class="hero-meta-label">Days</div>
+              <div class="hero-meta-value ${it.days_until < 0 ? 'bad' : it.days_until < 30 ? 'warn' : ''}">${it.days_until < 0 ? Math.abs(it.days_until) + ' late' : it.days_until}</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    ` : ''}
+
+    <button class="btn btn-primary btn-block" data-action="log" data-id="${itemId}">+ Log Service</button>
+    <div class="section-h" style="margin-top:24px;">
+      <div class="section-title">History</div>
+      <div class="section-count">${logs.length}</div>
+    </div>
+    ${logs.length === 0 ? `<div class="empty"><div class="empty-text">No history yet</div></div>` :
+      logs.map(l => `
+        <div class="log">
+          <div class="log-head"><span>${esc(l.service_date)}</span><span>${fmt(l.odometer_km)} km</span></div>
+          <div class="log-meta">
+            <span>${fmt(l.cost)} ${esc(l.currency)}</span>
+            ${l.workshop ? `<span>· ${esc(l.workshop)}</span>` : ''}
+          </div>
+          ${l.notes ? `<div class="log-notes">${esc(l.notes)}</div>` : ''}
+          ${l.attachments && l.attachments.length ? `
+            <div class="log-photos">
+              ${l.attachments.map(a => `<img src="/uploads/${esc(a.filename)}" class="log-photo" loading="lazy" data-action="open-photo" data-src="/uploads/${esc(a.filename)}">`).join('')}
+            </div>
+          ` : ''}
+          <button class="btn btn-ghost btn-sm" data-action="delete-log" data-id="${l.id}" style="margin-top:10px;">Delete entry</button>
+        </div>
+      `).join('')}
+  `);
+}
+
+async function deleteLog(logId) {
+  if (!confirm('Delete this service log?')) return;
+  await api(`/api/logs/${logId}`, { method: 'DELETE' });
+  closeSheet();
+  await loadCar();
+  toast('Deleted', 'good');
+}
+
+function openLogSheet(itemId) {
+  const it = state.items.find(i => i.id === itemId);
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  if (!it || !car) return;
+  const today = new Date().toISOString().slice(0, 10);
+
+  openSheet(`
+    <div class="sheet-title">Log Service</div>
+    <div class="sheet-subtitle">${esc(it.name_en)}</div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Date</label><input class="field-input" id="l_date" type="date" value="${today}"></div>
+      <div class="field"><label class="field-label">Odometer (km)</label><input class="field-input" id="l_km" type="number" value="${car.current_km}" inputmode="numeric"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Cost</label><input class="field-input" id="l_cost" type="number" step="0.01" value="0" inputmode="decimal"></div>
+      <div class="field">
+        <label class="field-label">Currency</label>
+        <select class="field-select" id="l_cur"><option>SAR</option><option>USD</option><option>EUR</option><option>AED</option></select>
+      </div>
+    </div>
+    <div class="field"><label class="field-label">Workshop</label><input class="field-input" id="l_workshop" placeholder="e.g. Audi Center Jeddah" autocomplete="off"></div>
+    <div class="field"><label class="field-label">Notes</label><textarea class="field-textarea" id="l_notes" placeholder="Parts replaced, observations…"></textarea></div>
+    <div class="field"><label class="field-label">Photos / Receipts</label><input class="field-input" id="l_files" type="file" multiple accept="image/*,application/pdf"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-log" data-id="${itemId}">Save</button>
+    </div>
+  `);
+}
+
+async function submitLog(itemId) {
+  const log = await api(`/api/items/${itemId}/logs`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_date: $('#l_date').value,
+      odometer_km: parseInt($('#l_km').value) || 0,
+      cost: parseFloat($('#l_cost').value) || 0,
+      currency: $('#l_cur').value,
+      workshop: $('#l_workshop').value.trim(),
+      notes: $('#l_notes').value.trim(),
+    }),
+  });
+  const files = $('#l_files').files;
+  if (files.length > 0) {
+    const fd = new FormData();
+    [...files].forEach(f => fd.append('files', f));
+    await fetch(`/api/logs/${log.id}/attachments`, { method: 'POST', body: fd, credentials: 'same-origin' });
+  }
+  closeSheet();
+  await loadCar();
+  toast('Service logged', 'good');
+}
+
+function openQuickLogSheet() {
+  openSheet(`
+    <div class="sheet-title">Quick Log</div>
+    <div class="sheet-subtitle">Pick a service</div>
+    <div class="field"><input class="field-input" id="qSearch" placeholder="Search…" autocomplete="off"></div>
+    <div id="qList" style="max-height:55dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  `);
+
+  const renderList = (q = '') => {
+    const f = q.toLowerCase().trim();
+    const matches = state.items.filter(i => !f || i.name_en.toLowerCase().includes(f) || (i.name_ar || '').includes(f) || (i.part_number || '').toLowerCase().includes(f));
+    $('#qList').innerHTML = matches.length === 0
+      ? '<div class="empty"><div class="empty-text">No matches</div></div>'
+      : matches.map(i => `
+        <button class="card" data-action="pick-quick-log" data-id="${i.id}">
+          <div class="card-row">
+            <div class="lamp ${lampClass(i.status)}"></div>
+            <div class="card-info">
+              <div class="card-title">${esc(i.name_en)}</div>
+              <div class="card-meta"><span>${esc(i.category)}</span></div>
+            </div>
+            <div class="card-arrow">›</div>
+          </div>
+        </button>
+      `).join('');
+  };
+  renderList();
+  $('#qSearch').addEventListener('input', (e) => renderList(e.target.value));
+}
+
+function openUpdateKmSheet() {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  openSheet(`
+    <div class="sheet-title">Odometer</div>
+    <div class="sheet-subtitle">Current reading</div>
+    <div class="field"><label class="field-label">Current km</label><input class="field-input" id="km_input" type="number" value="${car.current_km}" inputmode="numeric"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-update-km">Save</button>
+    </div>
+  `);
+}
+
+async function submitUpdateKm() {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  const newKm = parseInt($('#km_input').value) || 0;
+  await api(`/api/cars/${state.currentCarId}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...car, current_km: newKm }),
+  });
+  car.current_km = newKm;
+  closeSheet();
+  await loadCar();
+  toast('Updated', 'good');
+}
+
+async function savePartNumber(itemId) {
+  const newPn = $('#pn_input').value.trim();
+  await api(`/api/items/${itemId}/part`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ part_number: newPn || null }),
+  });
+  const item = state.items.find(i => i.id === itemId);
+  if (item) item.part_number = newPn || null;
+  toast('Part number saved', 'good');
+}
+
+async function saveIntervals(itemId) {
+  const pn = $('#pn_input').value.trim();
+  const ikm = $('#ikm_input').value.trim();
+  const imo = $('#imo_input').value.trim();
+  await api(`/api/items/${itemId}/part`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      part_number: pn || null,
+      interval_km: ikm ? parseInt(ikm) : null,
+      interval_months: imo ? parseInt(imo) : null,
+    }),
+  });
+  await loadCar();
+  closeSheet();
+  toast('Saved', 'good');
+}
+
+async function refreshSchedule() {
+  if (!confirm('Refresh schedule with latest official 2023 Audi A6 intervals and part numbers?\n\nYour service history will be preserved. Custom items you added won\'t be touched.')) return;
+  const result = await api(`/api/cars/${state.currentCarId}/refresh-audi-schedule`, { method: 'POST' });
+  await loadCar();
+  toast(`Updated ${result.updated} · Added ${result.added}`, 'good');
+}
+
+// ═══════════════════════════════════════════════════
+// FUEL TRACKING
+// ═══════════════════════════════════════════════════
+async function renderFuel(main) {
+  if (!state.currentCarId) { main.innerHTML = `<div class="empty"><div class="empty-text">No vehicle</div></div>`; return; }
+  main.innerHTML = `<div class="loading">Loading fuel log…</div>`;
+
+  const [fills, stats] = await Promise.all([
+    api(`/api/cars/${state.currentCarId}/fuel`),
+    api(`/api/cars/${state.currentCarId}/fuel/stats`),
+  ]);
+
+  const cur = stats.currency || 'SAR';
+
+  main.innerHTML = `
+    <div class="hero">
+      <div class="hero-label">Fuel Economy</div>
+      <div class="hero-value">${stats.avg_kml || '—'}<span class="unit">km/L</span></div>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><div class="hero-meta-label">L/100km</div><div class="hero-meta-value">${stats.avg_l100 || '—'}</div></div>
+        <div class="hero-meta-item"><div class="hero-meta-label">${cur}/km</div><div class="hero-meta-value">${stats.avg_cost_per_km ? stats.avg_cost_per_km.toFixed(2) : '—'}</div></div>
+        <div class="hero-meta-item"><div class="hero-meta-label">Fills</div><div class="hero-meta-value">${stats.fill_count}</div></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" data-action="add-fuel" style="margin-bottom:18px;">+ Log Fill-Up</button>
+
+    ${stats.monthly && stats.monthly.length >= 2 ? renderMonthlyChart(stats.monthly, 'Monthly Fuel Spend', 'cost', cur) : ''}
+
+    <div class="section-h">
+      <div class="section-title">History</div>
+      <div class="section-count">${fills.length}</div>
+    </div>
+
+    ${fills.length === 0 ? `
+      <div class="empty">
+        <div class="empty-icon">⛽</div>
+        <div class="empty-text">No fill-ups logged yet</div>
+      </div>
+    ` : fills.map(f => `
+      <div class="fuel-card ${f.full_tank ? '' : 'partial'}">
+        <div class="fuel-head">
+          <span>${esc(f.fill_date)}</span>
+          <span>${fmt(f.odometer_km)} km${f.full_tank ? '' : ' · partial'}</span>
+        </div>
+        <div class="fuel-amount">
+          <span class="fuel-liters">${f.liters.toFixed(2)} L</span>
+          <span class="fuel-cost">${fmt(f.total_cost.toFixed(2))} ${esc(f.currency)} · ${(f.total_cost / f.liters).toFixed(2)}/L</span>
+        </div>
+        <div class="fuel-meta">
+          ${f.kml ? `<span class="economy"><b>${f.kml}</b> km/L · <b>${f.l100}</b> L/100km</span>` : ''}
+          ${f.km_since ? `<span><b>${fmt(f.km_since)}</b> km since last</span>` : ''}
+          ${f.station ? `<span>· ${esc(f.station)}</span>` : ''}
+          ${f.fuel_type ? `<span>· ${esc(f.fuel_type)}</span>` : ''}
+        </div>
+        ${f.notes ? `<div style="font-size:12px;color:var(--text-3);margin-top:6px;">${esc(f.notes)}</div>` : ''}
+        <button class="btn btn-ghost btn-sm" data-action="delete-fuel" data-id="${f.id}" style="margin-top:8px;">Delete</button>
+      </div>
+    `).join('')}
+  `;
+}
+
+function openAddFuelSheet() {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  const today = new Date().toISOString().slice(0, 10);
+  openSheet(`
+    <div class="sheet-title">Log Fill-Up</div>
+    <div class="sheet-subtitle">${esc(car.name)}</div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Date</label><input class="field-input" id="ff_date" type="date" value="${today}"></div>
+      <div class="field"><label class="field-label">Odometer (km)</label><input class="field-input" id="ff_km" type="number" value="${car.current_km}" inputmode="numeric"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Liters</label><input class="field-input" id="ff_liters" type="number" step="0.01" placeholder="50.0" inputmode="decimal"></div>
+      <div class="field"><label class="field-label">Total Cost</label><input class="field-input" id="ff_cost" type="number" step="0.01" placeholder="120.00" inputmode="decimal"></div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Currency</label>
+        <select class="field-select" id="ff_cur"><option>SAR</option><option>USD</option><option>EUR</option><option>AED</option></select>
+      </div>
+      <div class="field">
+        <label class="field-label">Fuel Type</label>
+        <select class="field-select" id="ff_type"><option>95</option><option>91</option><option>Diesel</option></select>
+      </div>
+    </div>
+    <div class="field"><label class="field-label">Station</label><input class="field-input" id="ff_station" placeholder="e.g. Aramco" autocomplete="off"></div>
+    <label class="field-checkbox">
+      <input type="checkbox" id="ff_full" checked>
+      <span>Full tank (uncheck if partial)</span>
+    </label>
+    <div class="field"><label class="field-label">Notes</label><textarea class="field-textarea" id="ff_notes" placeholder="Optional"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-fuel">Save</button>
+    </div>
+  `);
+  setTimeout(() => $('#ff_liters')?.focus(), 200);
+}
+
+async function submitFuel() {
+  const liters = parseFloat($('#ff_liters').value);
+  const cost = parseFloat($('#ff_cost').value);
+  if (!liters || cost == null || isNaN(cost)) { toast('Liters and cost required', 'bad'); return; }
+
+  await api(`/api/cars/${state.currentCarId}/fuel`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fill_date: $('#ff_date').value,
+      odometer_km: parseInt($('#ff_km').value) || 0,
+      liters,
+      total_cost: cost,
+      currency: $('#ff_cur').value,
+      fuel_type: $('#ff_type').value,
+      station: $('#ff_station').value.trim(),
+      full_tank: $('#ff_full').checked,
+      notes: $('#ff_notes').value.trim(),
+    }),
+  });
+  // Update local car odometer
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  if (car) car.current_km = Math.max(car.current_km, parseInt($('#ff_km').value) || 0);
+  closeSheet();
+  render();
+  toast('Fill-up logged', 'good');
+}
+
+async function deleteFuel(fid) {
+  if (!confirm('Delete this fill-up?')) return;
+  await api(`/api/fuel/${fid}`, { method: 'DELETE' });
+  render();
+  toast('Deleted', 'good');
+}
+
+// ═══════════════════════════════════════════════════
+// CHARTS (lightweight inline SVG)
+// ═══════════════════════════════════════════════════
+function renderMonthlyChart(monthly, title, valueKey, currency) {
+  const data = monthly.slice(-12);
+  if (data.length === 0) return '';
+  const values = data.map(d => d[valueKey] || 0);
+  const max = Math.max(...values, 1);
+  const w = 320, h = 140, padL = 8, padR = 8, padTop = 16, padBottom = 24;
+  const chartW = w - padL - padR;
+  const chartH = h - padTop - padBottom;
+  const barW = chartW / data.length * 0.7;
+  const gapW = chartW / data.length * 0.3;
+
+  const bars = data.map((d, i) => {
+    const x = padL + (i * (barW + gapW)) + gapW / 2;
+    const barH = (d[valueKey] / max) * chartH;
+    const y = padTop + chartH - barH;
+    const isLast = i === data.length - 1;
+    return `
+      <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3"
+            fill="${isLast ? 'var(--accent)' : 'var(--info)'}" opacity="${isLast ? '1' : '0.7'}"/>
+      <text x="${x + barW / 2}" y="${h - 8}" text-anchor="middle"
+            fill="var(--text-3)" font-family="var(--mono)" font-size="9">${d.month.slice(5)}</text>
+    `;
+  }).join('');
+
+  const total = values.reduce((s, v) => s + v, 0);
+  const avg = total / data.length;
+
+  return `
+    <div class="chart-card">
+      <div class="chart-title">${esc(title)}</div>
+      <svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+        <line x1="${padL}" y1="${padTop + chartH}" x2="${w - padR}" y2="${padTop + chartH}" stroke="var(--line)" stroke-width="1"/>
+        ${bars}
+        <text x="${padL}" y="${padTop - 4}" fill="var(--text-3)" font-family="var(--mono)" font-size="9">${fmt(max.toFixed(0))} ${esc(currency)}</text>
+      </svg>
+      <div class="chart-legend">
+        <span>Avg: ${fmt(avg.toFixed(0))} ${esc(currency)}/mo</span>
+        <span>Total: ${fmt(total.toFixed(0))} ${esc(currency)}</span>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// SERVICE TEMPLATES
+// ═══════════════════════════════════════════════════
+async function openTemplatesSheet() {
+  openSheet(`<div class="loading">Loading templates…</div>`);
+  const templates = await api(`/api/cars/${state.currentCarId}/templates`);
+
+  openSheet(`
+    <div class="sheet-title">Service Templates</div>
+    <div class="sheet-subtitle">Workshop bundles · ${templates.length}</div>
+    <button class="btn btn-primary btn-block" data-action="add-template" style="margin-bottom:18px;">+ New Template</button>
+
+    ${templates.length === 0 ? `
+      <div class="empty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">No templates yet</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:8px;">Bundle services you do together (e.g. "60k major service")</div>
+      </div>
+    ` : templates.map(t => `
+      <div class="template-card">
+        <div class="template-name">${esc(t.name)}</div>
+        <div class="template-meta">
+          ${t.workshop ? `${esc(t.workshop)} · ` : ''}
+          ${t.item_count} items
+        </div>
+        <div class="template-items-pills">
+          ${t.items.map(i => `<span class="template-pill">${esc(i.name_en)}</span>`).join('')}
+        </div>
+        <div class="template-actions">
+          <span class="template-cost">${t.total_estimated > 0 ? '~' + fmt(t.total_estimated.toFixed(0)) + ' SAR' : ''}</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" data-action="delete-template" data-id="${t.id}">Delete</button>
+            <button class="btn btn-primary btn-sm" data-action="use-template" data-id="${t.id}">Apply</button>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `);
+}
+
+function openAddTemplateSheet() {
+  // Group items by category for picker
+  const grouped = {};
+  state.items.forEach(i => { (grouped[i.category] = grouped[i.category] || []).push(i); });
+
+  openSheet(`
+    <div class="sheet-title">New Template</div>
+    <div class="sheet-subtitle">Bundle services together</div>
+    <div class="field"><label class="field-label">Name</label><input class="field-input" id="t_name" placeholder="e.g. 60k Major Service" autocomplete="off"></div>
+    <div class="field"><label class="field-label">Workshop (optional)</label><input class="field-input" id="t_workshop" placeholder="e.g. Audi Center Jeddah" autocomplete="off"></div>
+    <div class="field"><label class="field-label">Notes (optional)</label><textarea class="field-textarea" id="t_notes" placeholder="Anything to remember"></textarea></div>
+
+    <div class="field-label" style="margin-bottom:8px;">Pick Services + Estimated Costs</div>
+    <div class="checkbox-list">
+      ${Object.keys(grouped).map(cat => `
+        <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-3);padding:10px 12px 4px;">${esc(cat)}</div>
+        ${grouped[cat].map(i => `
+          <div class="checkbox-row">
+            <input type="checkbox" id="ti_${i.id}" data-item-id="${i.id}" class="t-item-check">
+            <label for="ti_${i.id}">${esc(i.name_en)}</label>
+            <input type="number" class="cost-input t-item-cost" data-item-id="${i.id}" placeholder="cost" value="${i.last_service?.cost || ''}" inputmode="decimal" step="0.01">
+          </div>
+        `).join('')}
+      `).join('')}
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-template">Create</button>
+    </div>
+  `);
+  setTimeout(() => $('#t_name')?.focus(), 200);
+}
+
+async function submitTemplate() {
+  const name = $('#t_name').value.trim();
+  if (!name) { toast('Name required', 'bad'); return; }
+
+  const items = [];
+  document.querySelectorAll('.t-item-check:checked').forEach(cb => {
+    const itemId = parseInt(cb.dataset.itemId);
+    const costInput = document.querySelector(`.t-item-cost[data-item-id="${itemId}"]`);
+    items.push({ service_item_id: itemId, estimated_cost: parseFloat(costInput.value) || 0 });
+  });
+  if (items.length === 0) { toast('Pick at least one service', 'bad'); return; }
+
+  await api(`/api/cars/${state.currentCarId}/templates`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      workshop: $('#t_workshop').value.trim(),
+      notes: $('#t_notes').value.trim(),
+      items,
+    }),
+  });
+  closeSheet();
+  toast('Template created', 'good');
+  setTimeout(() => openTemplatesSheet(), 250);
+}
+
+function openApplyTemplateSheet(tid) {
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  const today = new Date().toISOString().slice(0, 10);
+  openSheet(`
+    <div class="sheet-title">Apply Template</div>
+    <div class="sheet-subtitle">Logs all template items at once</div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Date</label><input class="field-input" id="at_date" type="date" value="${today}"></div>
+      <div class="field"><label class="field-label">Odometer</label><input class="field-input" id="at_km" type="number" value="${car.current_km}" inputmode="numeric"></div>
+    </div>
+    <div class="field"><label class="field-label">Workshop (override)</label><input class="field-input" id="at_workshop" placeholder="Use template default" autocomplete="off"></div>
+    <div class="field"><label class="field-label">Notes</label><textarea class="field-textarea" id="at_notes" placeholder="Optional"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-apply-template" data-id="${tid}">Log All Services</button>
+    </div>
+  `);
+}
+
+async function submitApplyTemplate(tid) {
+  const result = await api(`/api/templates/${tid}/apply`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      service_date: $('#at_date').value,
+      odometer_km: parseInt($('#at_km').value) || 0,
+      currency: 'SAR',
+      workshop: $('#at_workshop').value.trim() || null,
+      notes: $('#at_notes').value.trim() || null,
+    }),
+  });
+  closeSheet();
+  await loadCar();
+  toast(`Logged ${result.logged} services`, 'good');
+}
+
+async function deleteTemplate(tid) {
+  if (!confirm('Delete this template?')) return;
+  await api(`/api/templates/${tid}`, { method: 'DELETE' });
+  toast('Template deleted', 'good');
+  setTimeout(() => openTemplatesSheet(), 200);
+}
+
+function openCarPhotoSheet(carId) {
+  const c = state.cars.find(x => x.id === carId);
+  if (!c) return;
+  const hasPhoto = !!c.photo_filename;
+  openSheet(`
+    <div class="sheet-title">Car Photo</div>
+    <div class="sheet-subtitle">${esc(c.name)}</div>
+    ${hasPhoto ? `
+      <div style="margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid var(--line);">
+        <img src="/uploads/${esc(c.photo_filename)}" style="width:100%;display:block;">
+      </div>
+    ` : `
+      <div style="padding:20px;background:var(--surface-hi);border:1px solid var(--line);border-radius:14px;margin-bottom:16px;text-align:center;">
+        <div style="font-family:var(--display);font-style:italic;font-size:18px;color:var(--text-2);margin-bottom:6px;">No photo yet</div>
+        <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">Showing default illustration</div>
+      </div>
+    `}
+    <div class="field">
+      <label class="field-label">Upload Photo</label>
+      <input class="field-input" id="cp_file" type="file" accept="image/*" capture="environment">
+    </div>
+    <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin:-6px 0 14px;">
+      Tip: a side-profile shot looks best in the hero card
+    </div>
+    <div class="btn-row">
+      ${hasPhoto ? `<button class="btn btn-danger" data-action="delete-car-photo" data-id="${carId}">Remove</button>` : ''}
+      <button class="btn btn-primary" data-action="submit-car-photo" data-id="${carId}">Save</button>
+    </div>
+  `);
+}
+
+async function submitCarPhoto(carId) {
+  const file = $('#cp_file').files[0];
+  if (!file) { toast('Pick a photo first', 'bad'); return; }
+
+  const fd = new FormData();
+  fd.append('photo', file);
+  const res = await fetch(`/api/cars/${carId}/photo`, {
+    method: 'POST',
+    body: fd,
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`Upload failed: ${txt}`);
+  }
+  const data = await res.json();
+  const car = state.cars.find(c => c.id === carId);
+  if (car) car.photo_filename = data.filename;
+  closeSheet();
+  render();
+  toast('Photo saved', 'good');
+}
+
+async function deleteCarPhoto(carId) {
+  if (!confirm('Remove this photo?')) return;
+  await api(`/api/cars/${carId}/photo`, { method: 'DELETE' });
+  const car = state.cars.find(c => c.id === carId);
+  if (car) car.photo_filename = null;
+  closeSheet();
+  render();
+  toast('Photo removed', 'good');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('[sw]', err));
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

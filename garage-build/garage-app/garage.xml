@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Garage</Name>
+  <Repository>garage:latest</Repository>
+  <Registry>https://hub.docker.com/</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support/>
+  <Project/>
+  <Overview>Self-hosted vehicle maintenance tracker. Track service schedules, log work, store receipts, and get reminders. Mobile-friendly PWA — install to your phone home screen and access from anywhere on your network (or via reverse proxy externally).</Overview>
+  <Category>Tools: Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/youruser/garage/main/frontend/icon.svg</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>Self-hosted vehicle maintenance tracker with multi-car support, photo attachments, cost tracking, reminders, and Excel/PDF export. Includes pre-loaded Audi A6 C8 45 TFSI maintenance schedule.</Description>
+  <Networking>
+    <Mode>bridge</Mode>
+    <Publish>
+      <Port>
+        <HostPort>8765</HostPort>
+        <ContainerPort>3000</ContainerPort>
+        <Protocol>tcp</Protocol>
+      </Port>
+    </Publish>
+  </Networking>
+  <Data>
+    <Volume>
+      <HostDir>/mnt/user/appdata/garage</HostDir>
+      <ContainerDir>/data</ContainerDir>
+      <Mode>rw</Mode>
+    </Volume>
+  </Data>
+  <Environment>
+    <Variable>
+      <Value>Asia/Riyadh</Value>
+      <Name>TZ</Name>
+      <Mode/>
+    </Variable>
+    <Variable>
+      <Value>3000</Value>
+      <Name>PORT</Name>
+      <Mode/>
+    </Variable>
+    <Variable>
+      <Value>/data</Value>
+      <Name>DATA_DIR</Name>
+      <Mode/>
+    </Variable>
+  </Environment>
+  <Labels/>
+  <Config Name="WebUI Port" Target="3000" Default="8765" Mode="tcp" Description="Host port for web access" Type="Port" Display="always" Required="true" Mask="false">8765</Config>
+  <Config Name="Data Directory" Target="/data" Default="/mnt/user/appdata/garage" Mode="rw" Description="Where SQLite database and uploaded photos are stored" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/garage</Config>
+  <Config Name="Timezone" Target="TZ" Default="Asia/Riyadh" Mode="" Description="Container timezone" Type="Variable" Display="always" Required="false" Mask="false">Asia/Riyadh</Config>
+</Container>
