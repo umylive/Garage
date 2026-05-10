@@ -321,7 +321,12 @@ async function callMistral(systemPrompt, userPrompt, maxTokens = 3000) {
 }
 function extractJSON(text) {
   const m = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/([\[{][\s\S]*[\]}])/);
-  return JSON.parse(m ? m[1] : text);
+  const parsed = JSON.parse(m ? m[1] : text);
+  if (Array.isArray(parsed)) return parsed;
+  // Mistral sometimes wraps the array in an object — unwrap it
+  const firstArray = Object.values(parsed).find(v => Array.isArray(v));
+  if (firstArray) return firstArray;
+  return parsed;
 }
 function mergeAISchedule(carId, items) {
   const existing = db.prepare(`SELECT id, name_en FROM service_items WHERE car_id = ?`).all(carId);
@@ -359,11 +364,18 @@ app.post('/api/cars/:id/ai-schedule', requireAuth, async (req, res) => {
   if (!desc) return res.status(400).json({ error: 'Set at least make/model/year before refreshing' });
   try {
     const text = await callMistral(
-      'You are a certified automotive technician. Respond ONLY with valid JSON — no markdown, no explanations.',
-      `Generate the complete manufacturer maintenance schedule for: ${desc}.\n\nReturn a JSON array. Each item:\n{"category":"Routine"|"Ignition"|"Cooling"|"Brakes"|"Suspension"|"Gaskets"|"Tyres"|"Other","name_en":"item name","name_ar":"Arabic name or null","part_number":"OEM part number or null","interval_km":integer or null,"interval_months":integer or null,"is_condition_based":0 or 1,"notes":"brief note or null"}\n\nInclude: engine oil & filter, air filter, cabin filter, spark plugs (petrol only), brake fluid, coolant, transmission fluid, brake pads (front+rear), brake discs (front+rear), tyre rotation, wiper blades, battery, timing belt/chain inspection, and any model-specific items. Use official manufacturer intervals.`
+      'You are a certified automotive technician. Output ONLY a raw JSON array with no wrapper object, no markdown, no explanation.',
+      `Generate the complete manufacturer maintenance schedule for: ${desc}.\n\nOutput a raw JSON array (starting with [ and ending with ]). Each element:\n{"category":"Routine"|"Ignition"|"Cooling"|"Brakes"|"Suspension"|"Gaskets"|"Tyres"|"Other","name_en":"item name","name_ar":"Arabic name or null","part_number":"OEM part number or null","interval_km":integer or null,"interval_months":integer or null,"is_condition_based":0 or 1,"notes":"brief note or null"}\n\nInclude: engine oil & filter, air filter, cabin filter, spark plugs (petrol only), brake fluid, coolant, transmission fluid, brake pads (front+rear), brake discs (front+rear), tyre rotation, wiper blades, battery, timing belt/chain inspection, and any model-specific items. Use official manufacturer intervals.`
     );
-    const items = extractJSON(text);
-    if (!Array.isArray(items)) throw new Error('AI returned unexpected format');
+    let items;
+    try { items = extractJSON(text); } catch (e) {
+      console.error('[AI schedule] parse error. Raw response:', text);
+      throw new Error('AI returned unexpected format');
+    }
+    if (!Array.isArray(items)) {
+      console.error('[AI schedule] not an array. Raw response:', text);
+      throw new Error('AI returned unexpected format');
+    }
     res.json(mergeAISchedule(carId, items));
   } catch (err) {
     res.status(500).json({ error: err.message });
