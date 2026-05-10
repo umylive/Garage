@@ -1170,12 +1170,12 @@ async function api(path, opts = {}) {
   }
 }
 
-function toast(msg, type = '') {
+function toast(msg, type = '', duration = 2400) {
   const t = $('#toast');
   t.textContent = msg;
   t.className = 'toast show ' + type;
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove('show'), 2400);
+  toast._t = duration > 0 ? setTimeout(() => t.classList.remove('show'), duration) : null;
 }
 
 function openSheet(html) {
@@ -2897,9 +2897,14 @@ async function refreshSchedule() {
   const car = state.cars.find(c => c.id === state.currentCarId);
   const desc = [car?.year, car?.make, car?.model, car?.engine].filter(Boolean).join(' ') || 'this vehicle';
   if (!confirm(`Pull AI maintenance schedule for ${desc}?\n\nExisting service items will be updated with manufacturer intervals and OEM part numbers. Your service history and custom items are preserved.`)) return;
-  const result = await api(`/api/cars/${state.currentCarId}/ai-schedule`, { method: 'POST' });
-  await loadCar();
-  toast(`Updated ${result.updated} · Added ${result.added} — ${result.total} items from AI`, 'good');
+  toast('Asking AI… this may take 20–30 seconds', '', 0);
+  try {
+    const result = await api(`/api/cars/${state.currentCarId}/ai-schedule`, { method: 'POST' });
+    await loadCar();
+    toast(`Updated ${result.updated} · Added ${result.added} — ${result.total} items from AI`, 'good');
+  } catch (err) {
+    toast(err.message || 'AI schedule refresh failed', 'bad');
+  }
 }
 
 // ═══════════════════════════════════════════════════
