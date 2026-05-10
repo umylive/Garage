@@ -42,11 +42,11 @@ The `garage/` directory at the repo root holds the **live runtime database and u
 ```
 garage-build/garage-app/
 ├── backend/
-│   ├── server.js      # All Express routes (~970 lines)
+│   ├── server.js      # All Express routes (~1100 lines)
 │   ├── database.js    # SQLite schema, inline migrations, Audi A6 seed data
 │   └── auth.js        # bcrypt, session cookies, rate limiting middleware
 ├── frontend/
-│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~2400 lines)
+│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~3300 lines)
 │   ├── sw.js          # Service worker (offline read-only caching)
 │   └── manifest.json  # PWA manifest
 ├── Dockerfile         # node:20-alpine, builds backend + copies frontend
@@ -63,13 +63,21 @@ garage-build/garage-app/
 
 **Service item status logic** (`server.js` — `GET /api/cars/:carId/items`): Computed at query time, not stored. Status is the worst of two independent checks — KM-based (`ok`/`never`/`due_soon`/`overdue`) and time-based (same). Thresholds: due_soon within 1500 km or 30 days; condition-based items always show `condition` status.
 
-**DB migrations**: Inline `migrate()` function in `database.js` runs on every startup using `PRAGMA table_info` to detect missing columns and `ALTER TABLE ADD COLUMN`. No migration framework. New tables use `CREATE TABLE IF NOT EXISTS` directly in the schema block — they are created automatically on first run.
+**DB migrations**: Inline `migrate()` function in `database.js` runs on every startup using `PRAGMA table_info` to detect missing columns and `ALTER TABLE ADD COLUMN`. No migration framework. New tables use `CREATE TABLE IF NOT EXISTS` directly in the schema block. To add a new column: add it to the `migrate()` block with an `if (!colNames.includes('col_name'))` guard.
 
-**Audi A6 seed**: `seedAudiA6(carId)` inserts a full OEM maintenance schedule for the 2023 Audi A6 C8 45 TFSI. `refreshAudiA6Schedule(carId)` updates intervals/part numbers on an existing car by matching `name_en`, with a rename map for items that changed names.
+**Audi A6 seed**: `seedAudiA6(carId)` inserts a full OEM maintenance schedule for the 2023 Audi A6 C8 45 TFSI. `refreshAudiA6Schedule(carId)` updates intervals/part numbers on an existing car by matching `name_en`, with a rename map for items that changed names. The AI schedule refresh (`POST /api/cars/:id/ai-schedule`) replaces this for all other cars using `mergeAISchedule()` in `server.js`, which applies the same name-matching merge logic.
 
-**Frontend event handling**: A single delegated `document.addEventListener('click')` handles all UI actions via `data-action` attributes on elements. Adding a new action requires: (1) a `data-action="my-action"` on the HTML element, (2) an `else if (action === 'my-action')` branch in the handler, and (3) the corresponding async function. Extra data beyond `data-id` is passed via additional `data-*` attributes (e.g. `data-item-id`).
+**Frontend event handling**: A single delegated `document.addEventListener('click')` handles all UI actions via `data-action` attributes on elements. Adding a new action requires: (1) a `data-action="my-action"` on the HTML element, (2) an `else if (action === 'my-action')` branch in the handler, and (3) the corresponding async function. Extra data beyond `data-id` is passed via additional `data-*` attributes (e.g. `data-item-id`, `data-brand`, `data-pn`).
 
 **Sheet pattern**: Bottom-sheet UI is rendered by calling `openSheet(htmlString)`. Sheets that need server data call `openSheet('<div class="loading">…</div>')` first, then fetch in parallel with `Promise.all`, then call `openSheet(fullHtml)`. Re-opening a sheet (e.g. after add/delete) is done by calling the open function again with the same id.
+
+**Dropdown + "Other" pattern**: Make, Model, and Engine fields use a `<select>` paired with a hidden `<input>` that appears when "Other…" is selected. Helper functions `getMakeValue()`, `getModelValue()`, `getEngineValue()` abstract reading the correct value. `onMakeChange(sel)` repopulates the Model select and resets Engine; `onModelChange(sel)` repopulates Engine. Static data lives in `CAR_BRANDS` (array), `CAR_MODELS` (make → model[]), and `CAR_ENGINES` (make → model → `{label, cylinders}[]`) constants at the top of the script block.
+
+**AI integration** (`server.js`): `callClaude(systemPrompt, userPrompt, maxTokens)` makes a direct HTTPS call to `api.anthropic.com/v1/messages` using `claude-haiku-4-5-20251001`. `extractJSON(text)` strips markdown fences before `JSON.parse`. Requires `ANTHROPIC_API_KEY` env var — endpoints return a clear error message if it's missing. Used by two routes: `POST /api/cars/:id/ai-schedule` (full maintenance schedule) and `POST /api/items/:id/ai-parts` (aftermarket part alternatives).
+
+**Photo from URL** (`server.js`): `POST /api/cars/:id/photo-from-url` downloads an image from a Wikimedia URL server-side (validates `^https://upload\.wikimedia\.org/`), saves it to UPLOADS_DIR, and updates `cars.photo_filename`. The frontend `loadPhotoSuggestions(carId)` calls the Wikipedia and Wikimedia Commons APIs directly (CORS allowed) and populates a thumbnail grid; clicking a thumbnail triggers this backend download.
+
+**Part Numbers**: `service_items.part_number` is the OEM part number shown as the primary entry. `part_alternatives` stores aftermarket cross-references (brand, part_number, type). `renderPartsSection(it, parts)` takes the full item object (`it`) as its first argument — not just `itemId` — so it can display the OEM number and car context for the AI button.
 
 ## Environment Variables
 
@@ -78,12 +86,13 @@ garage-build/garage-app/
 | `PORT` | `3000` | Internal server port |
 | `DATA_DIR` | `/data` | SQLite DB + uploads root |
 | `TZ` | — | Timezone (docker-compose sets `Asia/Riyadh`) |
+| `ANTHROPIC_API_KEY` | — | Enables AI schedule refresh + AI part suggestions |
 
 ## Database Schema (tables)
 
 `users` → `cars` (user_id FK) → `service_items` (car_id FK) → `service_log` (service_item_id FK) → `attachments` (log_id FK)
 
-`service_items` → `part_alternatives` (service_item_id FK) — stores OEM/aftermarket part options per item (brand, part_number, type)
+`service_items` → `part_alternatives` (service_item_id FK) — stores aftermarket part options per item (brand, part_number, type)
 
 `cars` → `fuel_log` (car_id FK)
 
@@ -91,9 +100,15 @@ garage-build/garage-app/
 
 `sessions` and `login_attempts` are auth-only, not linked to business data.
 
+Notable `cars` columns added via migration: `photo_filename`, `color`, `trim`, `power_hp`, `torque_nm`, `tune_stage`, `tune_power_hp`, `tune_torque_nm`, `engine`, `cylinders`.
+
 ## API Surface
 
 All routes under `/api/`. Public: `GET /api/auth/status`, `POST /api/auth/register|login|logout`. Admin-only: `GET|POST /api/users`, `DELETE /api/users/:id`, `POST /api/users/:id/reset-password`. Everything else requires `requireAuth` middleware.
+
+**Cars**: `GET /api/cars`, `POST /api/cars`, `PUT /api/cars/:id`, `DELETE /api/cars/:id`
+
+**Car photos**: `POST /api/cars/:id/photo` (multipart), `DELETE /api/cars/:id/photo`, `POST /api/cars/:id/photo-from-url` (Wikimedia URL download)
 
 **Service items**: `GET|POST /api/cars/:carId/items`, `PUT|DELETE /api/items/:id`, `PATCH /api/items/:id/part` (quick part-number/interval update)
 
@@ -104,6 +119,10 @@ All routes under `/api/`. Public: `GET /api/auth/status`, `POST /api/auth/regist
 **Fuel**: `GET|POST /api/cars/:carId/fuel`, `DELETE /api/fuel/:id`
 
 **Templates**: `GET|POST /api/cars/:carId/templates`, `DELETE /api/templates/:id`, `POST /api/templates/:id/apply`
+
+**AI**: `GET /api/ai/status`, `POST /api/cars/:id/ai-schedule`, `POST /api/items/:id/ai-parts`
+
+**Legacy**: `POST /api/cars/:carId/refresh-audi-schedule` (Audi A6 only, kept for backward compat)
 
 File uploads served at `/uploads/:filename` — auth-gated, ownership-checked before serving.
 
