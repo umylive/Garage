@@ -1234,6 +1234,8 @@ document.addEventListener('click', async (e) => {
     else if (action === 'submit-car-photo') submitCarPhoto(id);
     else if (action === 'delete-car-photo') deleteCarPhoto(id);
     else if (action === 'pick-suggested-photo') await pickSuggestedPhoto(id, target.dataset.url);
+    else if (action === 'photo-page-prev') { _photoSuggest.page = Math.max(0, _photoSuggest.page - 1); renderPhotoSuggestPage(); }
+    else if (action === 'photo-page-next') { const maxPage = Math.min(Math.ceil(_photoSuggest.urls.length / 6), 5) - 1; _photoSuggest.page = Math.min(maxPage, _photoSuggest.page + 1); renderPhotoSuggestPage(); }
     else if (action === 'suggest-ai-parts') await suggestPartsAI(id);
     else if (action === 'accept-ai-part') await acceptAIPart(id, target.dataset.brand, target.dataset.pn);
     // Fuel actions
@@ -3249,8 +3251,8 @@ function openCarPhotoSheet(carId) {
     `}
     ${hasMeta ? `
     <div style="font-size:11px;letter-spacing:0.05em;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">SUGGESTED PHOTOS — ${esc([c.year,c.make,c.model].filter(Boolean).join(' '))}</div>
-    <div id="photo-suggest-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-      <div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Searching…</div>
+    <div id="photo-suggest-grid" style="margin-bottom:16px;">
+      <div style="text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Searching…</div>
     </div>
     ` : ''}
     <div class="field">
@@ -3301,6 +3303,32 @@ async function deleteCarPhoto(carId) {
   toast('Photo removed', 'good');
 }
 
+let _photoSuggest = { urls: [], page: 0, carId: null };
+
+function renderPhotoSuggestPage() {
+  const container = document.getElementById('photo-suggest-grid');
+  if (!container) return;
+  const { urls, page, carId } = _photoSuggest;
+  const PAGE_SIZE = 6;
+  const totalPages = Math.min(Math.ceil(urls.length / PAGE_SIZE), 5);
+  const pageUrls = urls.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const btnStyle = 'padding:4px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface-hi);color:var(--text-1);cursor:pointer;font-size:18px;line-height:1;';
+  const nav = totalPages > 1 ? `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <button data-action="photo-page-prev" style="${btnStyle}${page === 0 ? 'opacity:0.3;pointer-events:none;' : ''}">&#8249;</button>
+      <span style="font-size:11px;color:var(--text-3);font-family:var(--mono);">${page + 1} / ${totalPages}</span>
+      <button data-action="photo-page-next" style="${btnStyle}${page >= totalPages - 1 ? 'opacity:0.3;pointer-events:none;' : ''}">&#8250;</button>
+    </div>` : '';
+  container.innerHTML = nav + `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">` +
+    pageUrls.map(url =>
+      `<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid var(--line);transition:border-color 0.15s;"
+           data-action="pick-suggested-photo" data-id="${carId}" data-url="${esc(url)}">
+        <img src="${esc(url)}" style="width:100%;height:75px;object-fit:cover;display:block;" loading="lazy"
+             onerror="this.parentElement.style.display='none'">
+      </div>`
+    ).join('') + `</div>`;
+}
+
 async function loadPhotoSuggestions(carId) {
   const c = state.cars.find(x => x.id === carId);
   const grid = document.getElementById('photo-suggest-grid');
@@ -3311,13 +3339,13 @@ async function loadPhotoSuggestions(carId) {
 
   try {
     const [wpData, commonsData] = await Promise.all([
-      fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(makeModel)}&srlimit=3&format=json&origin=*`).then(r => r.json()),
-      fetch(`https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(fullQuery)}&srnamespace=6&srlimit=8&format=json&origin=*`).then(r => r.json()),
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(makeModel)}&srlimit=10&format=json&origin=*`).then(r => r.json()),
+      fetch(`https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(fullQuery)}&srnamespace=6&srlimit=30&format=json&origin=*`).then(r => r.json()),
     ]);
 
     const imageUrls = [];
 
-    const wpPages = (wpData.query?.search || []).slice(0, 3);
+    const wpPages = (wpData.query?.search || []).slice(0, 10);
     if (wpPages.length) {
       const pageids = wpPages.map(p => p.pageid).join('|');
       const imgData = await fetch(`https://en.wikipedia.org/w/api.php?action=query&pageids=${pageids}&prop=pageimages&pithumbsize=500&pilicense=any&format=json&origin=*`).then(r => r.json());
@@ -3326,7 +3354,7 @@ async function loadPhotoSuggestions(carId) {
       }
     }
 
-    const commonsFiles = (commonsData.query?.search || []).slice(0, 6);
+    const commonsFiles = (commonsData.query?.search || []).slice(0, 24);
     if (commonsFiles.length) {
       const titles = commonsFiles.map(f => f.title).join('|');
       const infoData = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`).then(r => r.json());
@@ -3339,20 +3367,15 @@ async function loadPhotoSuggestions(carId) {
     if (!document.body.contains(grid)) return;
 
     if (!imageUrls.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">No suggestions found</div>';
+      grid.innerHTML = '<div style="text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">No suggestions found</div>';
       return;
     }
 
-    grid.innerHTML = imageUrls.slice(0, 6).map(url =>
-      `<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid var(--line);transition:border-color 0.15s;"
-           data-action="pick-suggested-photo" data-id="${carId}" data-url="${esc(url)}">
-        <img src="${esc(url)}" style="width:100%;height:75px;object-fit:cover;display:block;" loading="lazy"
-             onerror="this.parentElement.style.display='none'">
-      </div>`
-    ).join('');
+    _photoSuggest = { urls: imageUrls.slice(0, 30), page: 0, carId };
+    renderPhotoSuggestPage();
   } catch (e) {
     if (document.body.contains(grid)) {
-      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Could not load suggestions</div>';
+      grid.innerHTML = '<div style="text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Could not load suggestions</div>';
     }
   }
 }

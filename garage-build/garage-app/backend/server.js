@@ -413,22 +413,26 @@ app.post('/api/cars/:id/photo-from-url', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Only Wikimedia image URLs are supported' });
   }
 
-  const rawExt = (url.match(/\.(\w{2,5})(?:[?#/]|$)/i)?.[1] || 'jpg').toLowerCase();
-  const ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
-  if (!['jpg', 'png', 'webp', 'gif'].includes(ext)) return res.status(400).json({ error: 'Unsupported image type' });
+  const CT_TO_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const destPath = path.join(UPLOADS_DIR, filename);
-
+  let savedFilename = null;
   try {
-    await new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(destPath);
-      let totalSize = 0;
+    savedFilename = await new Promise((resolve, reject) => {
       https.get(url, { headers: { 'User-Agent': 'GarageApp/1.0 (self-hosted)' } }, (response) => {
         if (response.statusCode !== 200) {
-          file.close(); fs.unlink(destPath, () => {});
+          response.destroy();
           return reject(new Error(`Download failed: HTTP ${response.statusCode}`));
         }
+        const ct = (response.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+        const ext = CT_TO_EXT[ct];
+        if (!ext) {
+          response.destroy();
+          return reject(new Error('Unsupported image type'));
+        }
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const destPath = path.join(UPLOADS_DIR, filename);
+        const file = fs.createWriteStream(destPath);
+        let totalSize = 0;
         response.on('data', chunk => {
           totalSize += chunk.length;
           if (totalSize > 15 * 1024 * 1024) {
@@ -437,17 +441,17 @@ app.post('/api/cars/:id/photo-from-url', requireAuth, async (req, res) => {
           }
         });
         response.pipe(file);
-        file.on('finish', () => { file.close(); resolve(); });
+        file.on('finish', () => { file.close(); resolve(filename); });
         file.on('error', err => { fs.unlink(destPath, () => {}); reject(err); });
-      }).on('error', err => { fs.unlink(destPath, () => {}); reject(err); });
+      }).on('error', reject);
     });
 
     const old = db.prepare(`SELECT photo_filename FROM cars WHERE id = ?`).get(carId);
     if (old?.photo_filename) {
       try { fs.unlinkSync(path.join(UPLOADS_DIR, old.photo_filename)); } catch {}
     }
-    db.prepare(`UPDATE cars SET photo_filename = ? WHERE id = ?`).run(filename, carId);
-    res.json({ filename });
+    db.prepare(`UPDATE cars SET photo_filename = ? WHERE id = ?`).run(savedFilename, carId);
+    res.json({ filename: savedFilename });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Download failed' });
   }
