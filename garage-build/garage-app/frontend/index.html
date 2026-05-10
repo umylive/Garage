@@ -763,6 +763,128 @@ a { color: inherit; text-decoration: none; }
 <script>
 'use strict';
 
+// ─── Car make / model / year data ────────────────────────
+const CAR_BRANDS = [
+  'Acura','Alfa Romeo','Aston Martin','Audi','Bentley','BMW','Bugatti',
+  'Buick','Cadillac','Chevrolet','Chrysler','Citroën','Dacia','Dodge',
+  'Ferrari','Fiat','Ford','Genesis','GMC','Honda','Hyundai','Infiniti',
+  'Jaguar','Jeep','Kia','Lamborghini','Land Rover','Lexus','Lincoln',
+  'Lotus','Maserati','Mazda','McLaren','Mercedes-Benz','MINI','Mitsubishi',
+  'Nissan','Opel','Peugeot','Porsche','RAM','Renault','Rolls-Royce',
+  'SEAT','Škoda','Subaru','Suzuki','Tesla','Toyota','Volkswagen','Volvo',
+];
+const CAR_MODELS = {
+  'Acura':['ILX','TLX','RLX','MDX','RDX','NSX','Integra'],
+  'Alfa Romeo':['Giulia','Stelvio','Tonale','Giulietta','147','156','159','Brera','Spider','4C'],
+  'Aston Martin':['Vantage','DB11','DB12','DBS','DBX','Valkyrie','Rapide'],
+  'Audi':['A1','A3','A4','A5','A6','A7','A8','Q2','Q3','Q5','Q7','Q8','TT','R8','e-tron','Q4 e-tron','RS3','RS4','RS5','RS6','RS7','S3','S4','S5'],
+  'Bentley':['Continental GT','Flying Spur','Bentayga','Mulsanne'],
+  'BMW':['1 Series','2 Series','3 Series','4 Series','5 Series','6 Series','7 Series','8 Series','X1','X2','X3','X4','X5','X6','X7','Z4','M2','M3','M4','M5','i3','i4','iX'],
+  'Bugatti':['Chiron','Veyron','Bolide','Tourbillon'],
+  'Buick':['Encore','Envision','Enclave','LaCrosse'],
+  'Cadillac':['CT4','CT5','Escalade','XT4','XT5','XT6','Lyriq'],
+  'Chevrolet':['Spark','Sonic','Cruze','Malibu','Camaro','Corvette','Equinox','Trax','Blazer','Traverse','Tahoe','Suburban','Silverado','Colorado'],
+  'Chrysler':['300','Pacifica','Voyager'],
+  'Citroën':['C1','C3','C4','C5','C5 Aircross','Berlingo','Dispatch'],
+  'Dacia':['Sandero','Logan','Duster','Jogger','Spring'],
+  'Dodge':['Charger','Challenger','Durango','Grand Caravan','Viper','Hornet'],
+  'Ferrari':['Roma','Portofino','SF90','F8','812','296','Purosangue','LaFerrari'],
+  'Fiat':['500','Panda','Punto','Tipo','500X','500L','Doblo'],
+  'Ford':['Fiesta','Focus','Mustang','Explorer','F-150','Ranger','Edge','Escape','Bronco','Maverick','Expedition','Puma','Kuga','Mondeo'],
+  'Genesis':['G70','G80','G90','GV70','GV80'],
+  'GMC':['Sierra','Canyon','Yukon','Acadia','Terrain','Hummer EV'],
+  'Honda':['Civic','Accord','HR-V','CR-V','Pilot','Ridgeline','Odyssey','Fit','Jazz','City','Passport','Insight'],
+  'Hyundai':['i10','i20','i30','Elantra','Sonata','Tucson','Santa Fe','Kona','IONIQ 5','IONIQ 6','Palisade','Venue','Staria'],
+  'Infiniti':['Q50','Q60','QX50','QX55','QX60','QX80'],
+  'Jaguar':['XE','XF','XJ','F-Type','E-Pace','F-Pace','I-Pace'],
+  'Jeep':['Renegade','Compass','Cherokee','Grand Cherokee','Gladiator','Wrangler'],
+  'Kia':['Picanto','Rio','Ceed','Stinger','Seltos','Sportage','Sorento','Telluride','Carnival','Niro','EV6','Soul'],
+  'Lamborghini':['Huracán','Urus','Aventador','Revuelto'],
+  'Land Rover':['Defender','Discovery','Discovery Sport','Range Rover','Range Rover Sport','Range Rover Evoque','Range Rover Velar'],
+  'Lexus':['IS','ES','GS','LS','RC','LC','NX','RX','GX','LX','UX'],
+  'Lincoln':['Corsair','Nautilus','Aviator','Navigator','Continental'],
+  'Lotus':['Emira','Eletre','Evora','Exige','Elise'],
+  'Maserati':['Ghibli','Quattroporte','Levante','GranTurismo','Grecale'],
+  'Mazda':['Mazda2','Mazda3','Mazda6','CX-3','CX-30','CX-5','CX-60','CX-9','MX-5','MX-30'],
+  'McLaren':['GT','720S','765LT','Artura','Senna'],
+  'Mercedes-Benz':['A-Class','B-Class','C-Class','E-Class','S-Class','CLA','CLS','G-Class','GLA','GLB','GLC','GLE','GLS','EQA','EQB','EQC','EQE','EQS','AMG GT','SL'],
+  'MINI':['Hatch','Convertible','Clubman','Countryman','Aceman'],
+  'Mitsubishi':['Mirage','Lancer','Eclipse Cross','Outlander','ASX','Pajero','L200'],
+  'Nissan':['Micra','Juke','Qashqai','X-Trail','Murano','GT-R','370Z','400Z','Leaf','Ariya','Sentra','Altima','Rogue','Titan','Frontier'],
+  'Opel':['Corsa','Astra','Insignia','Mokka','Crossland','Grandland','Zafira'],
+  'Peugeot':['108','208','308','508','2008','3008','5008','Rifter'],
+  'Porsche':['911','718','Panamera','Macan','Cayenne','Taycan'],
+  'RAM':['1500','2500','3500','ProMaster'],
+  'Renault':['Twingo','Clio','Megane','Talisman','Kadjar','Captur','Zoe','Arkana'],
+  'Rolls-Royce':['Ghost','Phantom','Wraith','Dawn','Cullinan','Spectre'],
+  'SEAT':['Ibiza','Leon','Arona','Ateca','Tarraco'],
+  'Škoda':['Fabia','Octavia','Superb','Karoq','Kodiaq','Enyaq','Scala','Kamiq'],
+  'Subaru':['Impreza','Legacy','Outback','Forester','Crosstrek','BRZ','WRX','Solterra'],
+  'Suzuki':['Swift','Baleno','S-Cross','Vitara','Jimny','Ignis','Grand Vitara'],
+  'Tesla':['Model S','Model 3','Model X','Model Y','Cybertruck','Roadster'],
+  'Toyota':['Yaris','Corolla','Camry','RAV4','Venza','Highlander','4Runner','Land Cruiser','Tundra','Tacoma','Prius','bZ4X','Supra','GR86','Aygo X'],
+  'Volkswagen':['Polo','Golf','Passat','Arteon','T-Cross','T-Roc','Tiguan','Touareg','ID.3','ID.4','ID.5','ID.Buzz','Amarok','Touran'],
+  'Volvo':['S60','S90','V60','V90','XC40','XC60','XC90','C40','EX90'],
+};
+
+function makeBrandOptionsHtml(current) {
+  const inList = CAR_BRANDS.includes(current);
+  let html = '<option value="">-- Select Make --</option>';
+  for (const b of CAR_BRANDS) html += `<option value="${esc(b)}"${current===b?' selected':''}>${esc(b)}</option>`;
+  html += `<option value="__other__"${current && !inList?' selected':''}>Other…</option>`;
+  return html;
+}
+function carModelOptionsHtml(make, current) {
+  const models = CAR_MODELS[make] || [];
+  const inList = models.includes(current);
+  let html = `<option value="">${models.length?'-- Select Model --':'-- Select Make First --'}</option>`;
+  for (const m of models) html += `<option value="${esc(m)}"${current===m?' selected':''}>${esc(m)}</option>`;
+  if (models.length) html += `<option value="__other__"${current&&!inList?' selected':''}>Other…</option>`;
+  return html;
+}
+function carYearOptionsHtml(current) {
+  const cur = parseInt(current) || 0;
+  let html = '<option value="">-- Year --</option>';
+  for (let y = new Date().getFullYear() + 1; y >= 1950; y--) html += `<option value="${y}"${cur===y?' selected':''}>${y}</option>`;
+  return html;
+}
+function getMakeValue() {
+  const sel = document.getElementById('f_make');
+  if (!sel) return '';
+  if (sel.value === '__other__') return (document.getElementById('f_make_custom')?.value || '').trim();
+  return sel.value;
+}
+function getModelValue() {
+  const sel = document.getElementById('f_model');
+  const custom = document.getElementById('f_model_custom');
+  if (!sel || sel.style.display === 'none') return (custom?.value || '').trim();
+  if (sel.value === '__other__') return (custom?.value || '').trim();
+  return sel.value;
+}
+function getYearValue() { return parseInt(document.getElementById('f_year')?.value) || null; }
+function onMakeChange(sel) {
+  const isOther = sel.value === '__other__';
+  const makeCustom = document.getElementById('f_make_custom');
+  if (makeCustom) makeCustom.style.display = isOther ? '' : 'none';
+  const make = isOther ? '' : sel.value;
+  const modelSel = document.getElementById('f_model');
+  const modelCustom = document.getElementById('f_model_custom');
+  if (!modelSel) return;
+  modelSel.innerHTML = carModelOptionsHtml(make, '');
+  const hasModels = (CAR_MODELS[make] || []).length > 0;
+  if (!hasModels && make) {
+    modelSel.style.display = 'none';
+    if (modelCustom) { modelCustom.style.display = ''; modelCustom.value = ''; }
+  } else {
+    modelSel.style.display = '';
+    if (modelCustom) modelCustom.style.display = 'none';
+  }
+}
+function onModelChange(sel) {
+  const modelCustom = document.getElementById('f_model_custom');
+  if (modelCustom) modelCustom.style.display = sel.value === '__other__' ? '' : 'none';
+}
+
 const state = {
   authStatus: null,
   cars: [],
@@ -863,6 +985,7 @@ document.addEventListener('click', async (e) => {
     else if (action === 'edit-car-photo') openCarPhotoSheet(id);
     else if (action === 'submit-car-photo') submitCarPhoto(id);
     else if (action === 'delete-car-photo') deleteCarPhoto(id);
+    else if (action === 'pick-suggested-photo') await pickSuggestedPhoto(id, target.dataset.url);
     // Fuel actions
     else if (action === 'add-fuel') openAddFuelSheet();
     else if (action === 'submit-fuel') submitFuel();
@@ -1988,11 +2111,22 @@ function openAddCarSheet() {
     <div class="sheet-subtitle">Add to garage</div>
     <div class="field"><label class="field-label">Nickname</label><input class="field-input" id="f_name" placeholder="e.g. Daily Driver" autocomplete="off"></div>
     <div class="field-row">
-      <div class="field"><label class="field-label">Make</label><input class="field-input" id="f_make" autocomplete="off"></div>
-      <div class="field"><label class="field-label">Model</label><input class="field-input" id="f_model" autocomplete="off"></div>
+      <div class="field">
+        <label class="field-label">Make</label>
+        <select class="field-input" id="f_make" onchange="onMakeChange(this)">${makeBrandOptionsHtml('')}</select>
+        <input class="field-input" id="f_make_custom" placeholder="Type make…" style="margin-top:6px;display:none" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Model</label>
+        <select class="field-input" id="f_model" onchange="onModelChange(this)">${carModelOptionsHtml('', '')}</select>
+        <input class="field-input" id="f_model_custom" placeholder="Type model…" style="margin-top:6px;display:none" autocomplete="off">
+      </div>
     </div>
     <div class="field-row">
-      <div class="field"><label class="field-label">Year</label><input class="field-input" id="f_year" type="number" inputmode="numeric"></div>
+      <div class="field">
+        <label class="field-label">Year</label>
+        <select class="field-input" id="f_year">${carYearOptionsHtml('')}</select>
+      </div>
       <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="0" inputmode="numeric"></div>
     </div>
     <div class="field"><label class="field-label">Plate</label><input class="field-input" id="f_plate" autocomplete="off"></div>
@@ -2010,9 +2144,9 @@ async function submitAddCar() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: $('#f_name').value.trim() || 'New Car',
-      make: $('#f_make').value.trim(),
-      model: $('#f_model').value.trim(),
-      year: parseInt($('#f_year').value) || null,
+      make: getMakeValue(),
+      model: getModelValue(),
+      year: getYearValue(),
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2034,17 +2168,32 @@ async function submitAddCar() {
 function openEditCarSheet(carId) {
   const c = state.cars.find(x => x.id === carId);
   if (!c) return;
+  const makeIsOther = !!c.make && !CAR_BRANDS.includes(c.make);
+  const models = makeIsOther ? [] : (CAR_MODELS[c.make] || []);
+  const modelIsOther = !!c.model && models.length > 0 && !models.includes(c.model);
+  const modelShowInput = !models.length && !!c.make;
   openSheet(`
     <div class="sheet-title">${esc(c.name)}</div>
     <div class="sheet-subtitle">Edit Vehicle</div>
 
     <div class="field"><label class="field-label">Nickname</label><input class="field-input" id="f_name" value="${esc(c.name || '')}" autocomplete="off"></div>
     <div class="field-row">
-      <div class="field"><label class="field-label">Make</label><input class="field-input" id="f_make" value="${esc(c.make || '')}" autocomplete="off"></div>
-      <div class="field"><label class="field-label">Model</label><input class="field-input" id="f_model" value="${esc(c.model || '')}" autocomplete="off"></div>
+      <div class="field">
+        <label class="field-label">Make</label>
+        <select class="field-input" id="f_make" onchange="onMakeChange(this)">${makeBrandOptionsHtml(c.make || '')}</select>
+        <input class="field-input" id="f_make_custom" value="${makeIsOther?esc(c.make):''}" placeholder="Type make…" style="margin-top:6px;display:${makeIsOther?'':'none'}" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Model</label>
+        <select class="field-input" id="f_model" onchange="onModelChange(this)" style="${modelShowInput?'display:none;':''}">${carModelOptionsHtml(makeIsOther?'':(c.make||''), c.model||'')}</select>
+        <input class="field-input" id="f_model_custom" value="${(modelIsOther||modelShowInput)?esc(c.model||''):''}" placeholder="Type model…" style="margin-top:6px;display:${(modelIsOther||modelShowInput)?'':'none'}" autocomplete="off">
+      </div>
     </div>
     <div class="field-row">
-      <div class="field"><label class="field-label">Year</label><input class="field-input" id="f_year" type="number" value="${c.year || ''}" inputmode="numeric"></div>
+      <div class="field">
+        <label class="field-label">Year</label>
+        <select class="field-input" id="f_year">${carYearOptionsHtml(c.year||'')}</select>
+      </div>
       <div class="field"><label class="field-label">Trim</label><input class="field-input" id="f_trim" value="${esc(c.trim || '')}" placeholder="Premium" autocomplete="off"></div>
     </div>
     <div class="field"><label class="field-label">Color</label><input class="field-input" id="f_color" value="${esc(c.color || '')}" placeholder="Daytona Grey Pearl" autocomplete="off"></div>
@@ -2079,9 +2228,9 @@ async function submitEditCar(carId) {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: $('#f_name').value.trim(),
-      make: $('#f_make').value.trim(),
-      model: $('#f_model').value.trim(),
-      year: parseInt($('#f_year').value) || null,
+      make: getMakeValue(),
+      model: getModelValue(),
+      year: getYearValue(),
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2744,6 +2893,7 @@ function openCarPhotoSheet(carId) {
   const c = state.cars.find(x => x.id === carId);
   if (!c) return;
   const hasPhoto = !!c.photo_filename;
+  const hasMeta = !!(c.make || c.model);
   openSheet(`
     <div class="sheet-title">Car Photo</div>
     <div class="sheet-subtitle">${esc(c.name)}</div>
@@ -2757,9 +2907,15 @@ function openCarPhotoSheet(carId) {
         <div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">Showing default illustration</div>
       </div>
     `}
+    ${hasMeta ? `
+    <div style="font-size:11px;letter-spacing:0.05em;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">SUGGESTED PHOTOS — ${esc([c.year,c.make,c.model].filter(Boolean).join(' '))}</div>
+    <div id="photo-suggest-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Searching…</div>
+    </div>
+    ` : ''}
     <div class="field">
-      <label class="field-label">Upload Photo</label>
-      <input class="field-input" id="cp_file" type="file" accept="image/*" capture="environment">
+      <label class="field-label">Upload Your Own</label>
+      <input class="field-input" id="cp_file" type="file" accept="image/*">
     </div>
     <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);margin:-6px 0 14px;">
       Tip: a side-profile shot looks best in the hero card
@@ -2769,6 +2925,7 @@ function openCarPhotoSheet(carId) {
       <button class="btn btn-primary" data-action="submit-car-photo" data-id="${carId}">Save</button>
     </div>
   `);
+  if (hasMeta) loadPhotoSuggestions(carId);
 }
 
 async function submitCarPhoto(carId) {
@@ -2802,6 +2959,75 @@ async function deleteCarPhoto(carId) {
   closeSheet();
   render();
   toast('Photo removed', 'good');
+}
+
+async function loadPhotoSuggestions(carId) {
+  const c = state.cars.find(x => x.id === carId);
+  const grid = document.getElementById('photo-suggest-grid');
+  if (!c || !grid) return;
+
+  const makeModel = [c.make, c.model].filter(Boolean).join(' ');
+  const fullQuery = [c.year, c.make, c.model].filter(Boolean).join(' ');
+
+  try {
+    const [wpData, commonsData] = await Promise.all([
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(makeModel)}&srlimit=3&format=json&origin=*`).then(r => r.json()),
+      fetch(`https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(fullQuery)}&srnamespace=6&srlimit=8&format=json&origin=*`).then(r => r.json()),
+    ]);
+
+    const imageUrls = [];
+
+    const wpPages = (wpData.query?.search || []).slice(0, 3);
+    if (wpPages.length) {
+      const pageids = wpPages.map(p => p.pageid).join('|');
+      const imgData = await fetch(`https://en.wikipedia.org/w/api.php?action=query&pageids=${pageids}&prop=pageimages&pithumbsize=500&pilicense=any&format=json&origin=*`).then(r => r.json());
+      for (const p of Object.values(imgData.query?.pages || {})) {
+        if (p.thumbnail?.source) imageUrls.push(p.thumbnail.source);
+      }
+    }
+
+    const commonsFiles = (commonsData.query?.search || []).slice(0, 6);
+    if (commonsFiles.length) {
+      const titles = commonsFiles.map(f => f.title).join('|');
+      const infoData = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titles)}&prop=imageinfo&iiprop=url&iiurlwidth=400&format=json&origin=*`).then(r => r.json());
+      for (const p of Object.values(infoData.query?.pages || {})) {
+        const info = p.imageinfo?.[0];
+        if (info?.thumburl && /\.(jpg|jpeg|png|webp)/i.test(info.url || '')) imageUrls.push(info.thumburl);
+      }
+    }
+
+    if (!document.body.contains(grid)) return;
+
+    if (!imageUrls.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">No suggestions found</div>';
+      return;
+    }
+
+    grid.innerHTML = imageUrls.slice(0, 6).map(url =>
+      `<div style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid var(--line);transition:border-color 0.15s;"
+           data-action="pick-suggested-photo" data-id="${carId}" data-url="${esc(url)}">
+        <img src="${esc(url)}" style="width:100%;height:75px;object-fit:cover;display:block;" loading="lazy"
+             onerror="this.parentElement.style.display='none'">
+      </div>`
+    ).join('');
+  } catch (e) {
+    if (document.body.contains(grid)) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:14px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);">Could not load suggestions</div>';
+    }
+  }
+}
+
+async function pickSuggestedPhoto(carId, url) {
+  const res = await api(`/api/cars/${carId}/photo-from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+  const car = state.cars.find(c => c.id === carId);
+  if (car) car.photo_filename = res.filename;
+  closeSheet();
+  render();
+  toast('Photo saved', 'good');
 }
 
 if ('serviceWorker' in navigator) {

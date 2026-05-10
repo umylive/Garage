@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const { db, seedAudiA6 } = require('./database');
@@ -275,6 +276,57 @@ app.delete('/api/cars/:id/photo', requireAuth, (req, res) => {
   }
   db.prepare(`UPDATE cars SET photo_filename = NULL WHERE id = ?`).run(carId);
   res.json({ ok: true });
+});
+
+// Save car photo downloaded from a Wikimedia URL
+app.post('/api/cars/:id/photo-from-url', requireAuth, async (req, res) => {
+  const carId = parseInt(req.params.id);
+  if (!userOwnsCar(carId, req.user.id)) return res.status(404).json({ error: 'Not found' });
+
+  const { url } = req.body;
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'URL required' });
+  if (!/^https:\/\/upload\.wikimedia\.org\//.test(url)) {
+    return res.status(400).json({ error: 'Only Wikimedia image URLs are supported' });
+  }
+
+  const rawExt = (url.match(/\.(\w{2,5})(?:[?#/]|$)/i)?.[1] || 'jpg').toLowerCase();
+  const ext = rawExt === 'jpeg' ? 'jpg' : rawExt;
+  if (!['jpg', 'png', 'webp', 'gif'].includes(ext)) return res.status(400).json({ error: 'Unsupported image type' });
+
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const destPath = path.join(UPLOADS_DIR, filename);
+
+  try {
+    await new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(destPath);
+      let totalSize = 0;
+      https.get(url, { headers: { 'User-Agent': 'GarageApp/1.0 (self-hosted)' } }, (response) => {
+        if (response.statusCode !== 200) {
+          file.close(); fs.unlink(destPath, () => {});
+          return reject(new Error(`Download failed: HTTP ${response.statusCode}`));
+        }
+        response.on('data', chunk => {
+          totalSize += chunk.length;
+          if (totalSize > 15 * 1024 * 1024) {
+            response.destroy(); file.close(); fs.unlink(destPath, () => {});
+            reject(new Error('Image too large'));
+          }
+        });
+        response.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+        file.on('error', err => { fs.unlink(destPath, () => {}); reject(err); });
+      }).on('error', err => { fs.unlink(destPath, () => {}); reject(err); });
+    });
+
+    const old = db.prepare(`SELECT photo_filename FROM cars WHERE id = ?`).get(carId);
+    if (old?.photo_filename) {
+      try { fs.unlinkSync(path.join(UPLOADS_DIR, old.photo_filename)); } catch {}
+    }
+    db.prepare(`UPDATE cars SET photo_filename = ? WHERE id = ?`).run(filename, carId);
+    res.json({ filename });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Download failed' });
+  }
 });
 
 app.delete('/api/cars/:id', requireAuth, (req, res) => {
