@@ -73,7 +73,7 @@ garage-build/garage-app/
 
 **Dropdown + "Other" pattern**: Make, Model, and Engine fields use a `<select>` paired with a hidden `<input>` that appears when "Other…" is selected. Helper functions `getMakeValue()`, `getModelValue()`, `getEngineValue()` abstract reading the correct value. `onMakeChange(sel)` repopulates the Model select and resets Engine; `onModelChange(sel)` repopulates Engine. Static data lives in `CAR_BRANDS` (array), `CAR_MODELS` (make → model[]), and `CAR_ENGINES` (make → model → `{label, cylinders}[]`) constants at the top of the script block.
 
-**AI integration** (`server.js`): `callClaude(systemPrompt, userPrompt, maxTokens)` makes a direct HTTPS call to `api.anthropic.com/v1/messages` using `claude-haiku-4-5-20251001`. `extractJSON(text)` strips markdown fences before `JSON.parse`. Requires `ANTHROPIC_API_KEY` env var — endpoints return a clear error message if it's missing. Used by two routes: `POST /api/cars/:id/ai-schedule` (full maintenance schedule) and `POST /api/items/:id/ai-parts` (aftermarket part alternatives).
+**AI integration** (`server.js`): `callMistral(systemPrompt, userPrompt, maxTokens)` makes a direct HTTPS call to `api.mistral.ai/v1/chat/completions` using `mistral-small-latest`. `extractJSON(text)` strips markdown fences before `JSON.parse`. Requires `MISTRAL_API_KEY` env var — endpoints return a clear error message if it's missing. Used by two routes: `POST /api/cars/:id/ai-schedule` (full maintenance schedule) and `POST /api/items/:id/ai-parts` (aftermarket part alternatives).
 
 **Photo from URL** (`server.js`): `POST /api/cars/:id/photo-from-url` downloads an image from a Wikimedia URL server-side (validates `^https://upload\.wikimedia\.org/`), saves it to UPLOADS_DIR, and updates `cars.photo_filename`. The frontend `loadPhotoSuggestions(carId)` calls the Wikipedia and Wikimedia Commons APIs directly (CORS allowed) and populates a thumbnail grid; clicking a thumbnail triggers this backend download.
 
@@ -86,7 +86,7 @@ garage-build/garage-app/
 | `PORT` | `3000` | Internal server port |
 | `DATA_DIR` | `/data` | SQLite DB + uploads root |
 | `TZ` | — | Timezone (docker-compose sets `Asia/Riyadh`) |
-| `ANTHROPIC_API_KEY` | — | Enables AI schedule refresh + AI part suggestions |
+| `MISTRAL_API_KEY` | — | Enables AI schedule refresh + AI part suggestions |
 
 ## Database Schema (tables)
 
