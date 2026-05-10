@@ -283,22 +283,20 @@ app.delete('/api/cars/:id/photo', requireAuth, (req, res) => {
 });
 
 // ─── AI helpers ───────────────────────────────────────────────────────────────
-async function callClaude(systemPrompt, userPrompt, maxTokens = 3000) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured in docker-compose.yml');
+async function callGemini(systemPrompt, userPrompt, maxTokens = 3000) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY not configured in docker-compose.yml');
   const body = JSON.stringify({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: maxTokens,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userPrompt }],
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ parts: [{ text: userPrompt }] }],
+    generationConfig: { maxOutputTokens: maxTokens },
   });
   return new Promise((resolve, reject) => {
     const req = https.request({
-      hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(body),
-      },
+      hostname: 'generativelanguage.googleapis.com',
+      path: `/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
     }, (res) => {
       let data = '';
       res.on('data', c => { data += c; });
@@ -306,7 +304,7 @@ async function callClaude(systemPrompt, userPrompt, maxTokens = 3000) {
         try {
           const parsed = JSON.parse(data);
           if (parsed.error) return reject(new Error(parsed.error.message));
-          resolve(parsed.content[0].text);
+          resolve(parsed.candidates[0].content.parts[0].text);
         } catch (e) { reject(new Error('Failed to parse AI response')); }
       });
     });
@@ -343,7 +341,7 @@ function mergeAISchedule(carId, items) {
 }
 
 app.get('/api/ai/status', requireAuth, (req, res) => {
-  res.json({ configured: !!process.env.ANTHROPIC_API_KEY });
+  res.json({ configured: !!process.env.GEMINI_API_KEY });
 });
 
 app.post('/api/cars/:id/ai-schedule', requireAuth, async (req, res) => {
@@ -353,7 +351,7 @@ app.post('/api/cars/:id/ai-schedule', requireAuth, async (req, res) => {
   const desc = [car.year, car.make, car.model, car.engine, car.trim].filter(Boolean).join(' ');
   if (!desc) return res.status(400).json({ error: 'Set at least make/model/year before refreshing' });
   try {
-    const text = await callClaude(
+    const text = await callGemini(
       'You are a certified automotive technician. Respond ONLY with valid JSON — no markdown, no explanations.',
       `Generate the complete manufacturer maintenance schedule for: ${desc}.\n\nReturn a JSON array. Each item:\n{"category":"Routine"|"Ignition"|"Cooling"|"Brakes"|"Suspension"|"Gaskets"|"Tyres"|"Other","name_en":"item name","name_ar":"Arabic name or null","part_number":"OEM part number or null","interval_km":integer or null,"interval_months":integer or null,"is_condition_based":0 or 1,"notes":"brief note or null"}\n\nInclude: engine oil & filter, air filter, cabin filter, spark plugs (petrol only), brake fluid, coolant, transmission fluid, brake pads (front+rear), brake discs (front+rear), tyre rotation, wiper blades, battery, timing belt/chain inspection, and any model-specific items. Use official manufacturer intervals.`
     );
@@ -372,7 +370,7 @@ app.post('/api/items/:id/ai-parts', requireAuth, async (req, res) => {
   if (!item) return res.status(404).json({ error: 'Not found' });
   const carDesc = [item.year, item.make, item.model, item.engine].filter(Boolean).join(' ') || 'unknown vehicle';
   try {
-    const text = await callClaude(
+    const text = await callGemini(
       'You are an automotive parts expert. Respond ONLY with a valid JSON array — no markdown, no explanations.',
       `For a ${carDesc}, the service item is: "${item.name_en}"${item.part_number ? ` (OEM: ${item.part_number})` : ''}.\n\nList 3-5 quality aftermarket alternatives from brands like Mahle, Mann-Filter, Hengst, Bosch, Valeo, NGK, Denso, ACDelco, Fram, Wix, Filtron, etc.\n\nReturn JSON: [{"brand":"Brand","part_number":"XXXXX"}]\n\nOnly include part numbers you are confident about. Return [] if uncertain.`,
       1200

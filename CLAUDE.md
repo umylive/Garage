@@ -33,7 +33,7 @@ The app is deployed to Unraid by pulling the pre-built image from GHCR:
 ```
 ghcr.io/umylive/garage:latest
 ```
-Every push to `main` that touches `garage-build/**` triggers `.github/workflows/docker-build.yml`, which builds and pushes a new image tagged `latest`, by SHA, and by timestamp. The Unraid instance pulls the new image to update.
+Every push to `main` that touches `garage-build/**` (or changes the workflow file itself) triggers `.github/workflows/docker-build.yml`, which builds and pushes a new image tagged `latest`, by SHA, and by timestamp. The workflow can also be triggered manually via `workflow_dispatch` in the GitHub Actions UI. The Unraid instance pulls the new image to update.
 
 The `garage/` directory at the repo root holds the **live runtime database and uploads** — it is excluded from git via `.gitignore` and must never be committed.
 
@@ -67,7 +67,7 @@ garage-build/garage-app/
 
 **Audi A6 seed**: `seedAudiA6(carId)` inserts a full OEM maintenance schedule for the 2023 Audi A6 C8 45 TFSI. `refreshAudiA6Schedule(carId)` updates intervals/part numbers on an existing car by matching `name_en`, with a rename map for items that changed names. The AI schedule refresh (`POST /api/cars/:id/ai-schedule`) replaces this for all other cars using `mergeAISchedule()` in `server.js`, which applies the same name-matching merge logic.
 
-**Frontend event handling**: A single delegated `document.addEventListener('click')` handles all UI actions via `data-action` attributes on elements. Adding a new action requires: (1) a `data-action="my-action"` on the HTML element, (2) an `else if (action === 'my-action')` branch in the handler, and (3) the corresponding async function. Extra data beyond `data-id` is passed via additional `data-*` attributes (e.g. `data-item-id`, `data-brand`, `data-pn`).
+**Frontend event handling**: A single delegated `document.addEventListener('click')` handles all UI actions via `data-action` attributes on elements. Adding a new action requires: (1) a `data-action="my-action"` on the HTML element, (2) an `else if (action === 'my-action')` branch in the handler, and (3) the corresponding async function. Extra data beyond `data-id` is passed via additional `data-*` attributes (e.g. `data-item-id`, `data-brand`, `data-pn`). There are 46+ action types covering cars, items, logs, fuel, templates, parts, photos, AI, settings, and user management.
 
 **Sheet pattern**: Bottom-sheet UI is rendered by calling `openSheet(htmlString)`. Sheets that need server data call `openSheet('<div class="loading">…</div>')` first, then fetch in parallel with `Promise.all`, then call `openSheet(fullHtml)`. Re-opening a sheet (e.g. after add/delete) is done by calling the open function again with the same id.
 
@@ -121,6 +121,12 @@ All routes under `/api/`. Public: `GET /api/auth/status`, `POST /api/auth/regist
 **Templates**: `GET|POST /api/cars/:carId/templates`, `DELETE /api/templates/:id`, `POST /api/templates/:id/apply`
 
 **AI**: `GET /api/ai/status`, `POST /api/cars/:id/ai-schedule`, `POST /api/items/:id/ai-parts`
+
+**Account**: `GET /api/account/me` (current user profile), `POST /api/account/password` (self-service password change)
+
+**Dashboard**: `GET /api/cars/:carId/dashboard` (car + total cost + recent logs, used by the car detail header)
+
+**Fuel stats**: `GET /api/cars/:carId/fuel/stats` (aggregated monthly breakdown, averages, totals)
 
 **Legacy**: `POST /api/cars/:carId/refresh-audi-schedule` (Audi A6 only, kept for backward compat)
 
