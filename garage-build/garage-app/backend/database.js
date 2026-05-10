@@ -173,6 +173,11 @@ function migrate() {
     db.exec(`ALTER TABLE cars ADD COLUMN tune_power_hp INTEGER`);
     db.exec(`ALTER TABLE cars ADD COLUMN tune_torque_nm INTEGER`);
   }
+  if (!colNames.includes('engine')) {
+    console.log('🔄 Migrating: adding engine/cylinders to cars');
+    db.exec(`ALTER TABLE cars ADD COLUMN engine TEXT`);
+    db.exec(`ALTER TABLE cars ADD COLUMN cylinders INTEGER`);
+  }
 }
 migrate();
 

@@ -827,6 +827,250 @@ const CAR_MODELS = {
   'Volvo':['S60','S90','V60','V90','XC40','XC60','XC90','C40','EX90'],
 };
 
+const CAR_ENGINES = {
+  'Audi':{
+    'A1':[{label:'25 TFSI 1.0L',cylinders:3},{label:'30 TFSI 1.0L',cylinders:3},{label:'35 TFSI 1.5L',cylinders:4}],
+    'A3':[{label:'30 TFSI 1.0L',cylinders:3},{label:'35 TFSI 1.5L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'35 TDI 2.0L',cylinders:4},{label:'40 TDI 2.0L',cylinders:4},{label:'RS3 2.5L',cylinders:5}],
+    'A4':[{label:'35 TFSI 2.0L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'45 TFSI 2.0L',cylinders:4},{label:'35 TDI 2.0L',cylinders:4},{label:'40 TDI 2.0L',cylinders:4},{label:'RS4 2.9L V6',cylinders:6}],
+    'A5':[{label:'35 TFSI 2.0L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'45 TFSI 2.0L',cylinders:4},{label:'40 TDI 2.0L',cylinders:4},{label:'RS5 2.9L V6',cylinders:6}],
+    'A6':[{label:'35 TFSI 2.0L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'45 TFSI 2.0L',cylinders:4},{label:'55 TFSI 3.0L V6',cylinders:6},{label:'45 TDI 3.0L V6',cylinders:6},{label:'50 TDI 3.0L V6',cylinders:6},{label:'RS 6 Avant 4.0L V8',cylinders:8}],
+    'A7':[{label:'45 TFSI 2.0L',cylinders:4},{label:'55 TFSI 3.0L V6',cylinders:6},{label:'50 TDI 3.0L V6',cylinders:6},{label:'RS 7 4.0L V8',cylinders:8}],
+    'A8':[{label:'55 TFSI 3.0L V6',cylinders:6},{label:'60 TFSI 4.0L V8',cylinders:8},{label:'50 TDI 3.0L V6',cylinders:6}],
+    'Q2':[{label:'30 TFSI 1.0L',cylinders:3},{label:'35 TFSI 1.5L',cylinders:4},{label:'30 TDI 2.0L',cylinders:4}],
+    'Q3':[{label:'35 TFSI 1.5L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'35 TDI 2.0L',cylinders:4},{label:'RS Q3 2.5L',cylinders:5}],
+    'Q5':[{label:'35 TFSI 2.0L',cylinders:4},{label:'40 TFSI 2.0L',cylinders:4},{label:'45 TFSI 2.0L',cylinders:4},{label:'35 TDI 2.0L',cylinders:4},{label:'40 TDI 2.0L',cylinders:4},{label:'SQ5 3.0L V6',cylinders:6}],
+    'Q7':[{label:'45 TFSI 2.0L',cylinders:4},{label:'55 TFSI 3.0L V6',cylinders:6},{label:'45 TDI 3.0L V6',cylinders:6},{label:'SQ7 4.0L V8',cylinders:8}],
+    'Q8':[{label:'55 TFSI 3.0L V6',cylinders:6},{label:'50 TDI 3.0L V6',cylinders:6},{label:'SQ8 4.0L V8',cylinders:8},{label:'RS Q8 4.0L V8',cylinders:8}],
+    'e-tron':[{label:'50 quattro Electric',cylinders:0},{label:'55 quattro Electric',cylinders:0}],
+    'Q4 e-tron':[{label:'35 Electric',cylinders:0},{label:'40 Electric',cylinders:0},{label:'50 quattro Electric',cylinders:0}],
+    'TT':[{label:'40 TFSI 2.0L',cylinders:4},{label:'45 TFSI 2.0L',cylinders:4},{label:'TT RS 2.5L',cylinders:5}],
+    'R8':[{label:'V10 5.2L',cylinders:10},{label:'V10 Plus 5.2L',cylinders:10}],
+    'RS3':[{label:'RS3 2.5L 5cyl Turbo',cylinders:5}],
+    'RS4':[{label:'RS4 2.9L V6 Turbo',cylinders:6}],
+    'RS5':[{label:'RS5 2.9L V6 Turbo',cylinders:6}],
+    'RS6':[{label:'RS6 4.0L V8 Turbo',cylinders:8}],
+    'RS7':[{label:'RS7 4.0L V8 Turbo',cylinders:8}],
+    'S3':[{label:'S3 2.0L 4cyl Turbo',cylinders:4}],
+    'S4':[{label:'S4 3.0L V6 Turbo',cylinders:6}],
+    'S5':[{label:'S5 3.0L V6 Turbo',cylinders:6}],
+  },
+  'BMW':{
+    '1 Series':[{label:'116i 1.5L 3cyl',cylinders:3},{label:'118i 1.5L 3cyl',cylinders:3},{label:'120i 2.0L',cylinders:4},{label:'118d 2.0L',cylinders:4},{label:'120d 2.0L',cylinders:4},{label:'M135i 2.0L',cylinders:4}],
+    '2 Series':[{label:'218i 1.5L',cylinders:3},{label:'220i 2.0L',cylinders:4},{label:'230i 2.0L',cylinders:4},{label:'218d 2.0L',cylinders:4},{label:'220d 2.0L',cylinders:4},{label:'M240i 3.0L',cylinders:6}],
+    '3 Series':[{label:'318i 2.0L',cylinders:4},{label:'320i 2.0L',cylinders:4},{label:'330i 2.0L',cylinders:4},{label:'320d 2.0L',cylinders:4},{label:'330d 3.0L',cylinders:6},{label:'330e PHEV 2.0L',cylinders:4},{label:'M340i 3.0L',cylinders:6},{label:'M3 3.0L',cylinders:6}],
+    '4 Series':[{label:'420i 2.0L',cylinders:4},{label:'430i 2.0L',cylinders:4},{label:'420d 2.0L',cylinders:4},{label:'430d 3.0L',cylinders:6},{label:'M440i 3.0L',cylinders:6},{label:'M4 3.0L',cylinders:6}],
+    '5 Series':[{label:'520i 2.0L',cylinders:4},{label:'530i 2.0L',cylinders:4},{label:'540i 3.0L',cylinders:6},{label:'520d 2.0L',cylinders:4},{label:'530d 3.0L',cylinders:6},{label:'540d 3.0L',cylinders:6},{label:'530e PHEV',cylinders:4},{label:'M550i 4.4L V8',cylinders:8},{label:'M5 4.4L V8',cylinders:8}],
+    '7 Series':[{label:'730i 2.0L',cylinders:4},{label:'740i 3.0L',cylinders:6},{label:'750i 4.4L V8',cylinders:8},{label:'730d 3.0L',cylinders:6},{label:'740d 3.0L',cylinders:6},{label:'745e PHEV 3.0L',cylinders:6},{label:'M760i 6.6L V12',cylinders:12}],
+    '8 Series':[{label:'840i 3.0L',cylinders:6},{label:'840d 3.0L',cylinders:6},{label:'M850i 4.4L V8',cylinders:8},{label:'M8 4.4L V8',cylinders:8}],
+    'X1':[{label:'sDrive18i 1.5L',cylinders:3},{label:'xDrive20i 2.0L',cylinders:4},{label:'xDrive25e PHEV',cylinders:3},{label:'sDrive18d 2.0L',cylinders:4},{label:'xDrive20d 2.0L',cylinders:4}],
+    'X2':[{label:'sDrive18i 1.5L',cylinders:3},{label:'xDrive20i 2.0L',cylinders:4},{label:'M35i 2.0L',cylinders:4}],
+    'X3':[{label:'sDrive20i 2.0L',cylinders:4},{label:'xDrive30i 2.0L',cylinders:4},{label:'xDrive20d 2.0L',cylinders:4},{label:'xDrive30d 3.0L',cylinders:6},{label:'xDrive30e PHEV',cylinders:4},{label:'M40i 3.0L',cylinders:6}],
+    'X4':[{label:'xDrive20i 2.0L',cylinders:4},{label:'xDrive30i 2.0L',cylinders:4},{label:'xDrive20d 2.0L',cylinders:4},{label:'M40i 3.0L',cylinders:6}],
+    'X5':[{label:'xDrive40i 3.0L',cylinders:6},{label:'xDrive30d 3.0L',cylinders:6},{label:'xDrive40d 3.0L',cylinders:6},{label:'xDrive45e PHEV 3.0L',cylinders:6},{label:'M50i 4.4L V8',cylinders:8},{label:'X5 M 4.4L V8',cylinders:8}],
+    'X6':[{label:'xDrive40i 3.0L',cylinders:6},{label:'xDrive40d 3.0L',cylinders:6},{label:'M50i 4.4L V8',cylinders:8},{label:'X6 M 4.4L V8',cylinders:8}],
+    'X7':[{label:'xDrive40i 3.0L',cylinders:6},{label:'xDrive40d 3.0L',cylinders:6},{label:'M60i 4.4L V8',cylinders:8}],
+    'i3':[{label:'i3 Electric',cylinders:0},{label:'i3s Electric',cylinders:0}],
+    'i4':[{label:'eDrive35 Electric',cylinders:0},{label:'eDrive40 Electric',cylinders:0},{label:'M50 Electric AWD',cylinders:0}],
+    'iX':[{label:'xDrive40 Electric',cylinders:0},{label:'xDrive50 Electric',cylinders:0},{label:'M60 Electric',cylinders:0}],
+  },
+  'Mercedes-Benz':{
+    'A-Class':[{label:'A 160 1.3L',cylinders:4},{label:'A 180 1.4L',cylinders:4},{label:'A 200 1.3L',cylinders:4},{label:'A 220 2.0L',cylinders:4},{label:'A 180d 1.5L',cylinders:4},{label:'A 200d 2.0L',cylinders:4},{label:'AMG A 35 2.0L',cylinders:4},{label:'AMG A 45 S 2.0L',cylinders:4}],
+    'B-Class':[{label:'B 180 1.3L',cylinders:4},{label:'B 200 1.3L',cylinders:4},{label:'B 180d 1.5L',cylinders:4}],
+    'C-Class':[{label:'C 180 1.5L',cylinders:4},{label:'C 200 1.5L',cylinders:4},{label:'C 300 2.0L',cylinders:4},{label:'C 220d 2.0L',cylinders:4},{label:'C 300d 2.0L',cylinders:4},{label:'C 300e PHEV 2.0L',cylinders:4},{label:'AMG C 43 3.0L',cylinders:6},{label:'AMG C 63 4.0L V8',cylinders:8}],
+    'E-Class':[{label:'E 200 2.0L',cylinders:4},{label:'E 220d 2.0L',cylinders:4},{label:'E 300 2.0L',cylinders:4},{label:'E 350 3.0L',cylinders:6},{label:'E 400d 3.0L',cylinders:6},{label:'E 300e PHEV',cylinders:4},{label:'AMG E 53 3.0L',cylinders:6},{label:'AMG E 63 S 4.0L V8',cylinders:8}],
+    'S-Class':[{label:'S 350d 3.0L',cylinders:6},{label:'S 400d 3.0L',cylinders:6},{label:'S 450 3.0L',cylinders:6},{label:'S 500 3.0L',cylinders:6},{label:'S 580 4.0L V8',cylinders:8},{label:'S 680 6.0L V12',cylinders:12},{label:'AMG S 63 4.0L V8',cylinders:8}],
+    'CLA':[{label:'CLA 180 1.3L',cylinders:4},{label:'CLA 200 1.3L',cylinders:4},{label:'CLA 220 2.0L',cylinders:4},{label:'AMG CLA 35 2.0L',cylinders:4},{label:'AMG CLA 45 S 2.0L',cylinders:4}],
+    'G-Class':[{label:'G 350d 3.0L',cylinders:6},{label:'G 500 4.0L V8',cylinders:8},{label:'AMG G 63 4.0L V8',cylinders:8}],
+    'GLA':[{label:'GLA 200 1.3L',cylinders:4},{label:'GLA 220d 2.0L',cylinders:4},{label:'AMG GLA 35 2.0L',cylinders:4}],
+    'GLC':[{label:'GLC 200 2.0L',cylinders:4},{label:'GLC 220d 2.0L',cylinders:4},{label:'GLC 300 2.0L',cylinders:4},{label:'GLC 300d 2.0L',cylinders:4},{label:'GLC 300e PHEV',cylinders:4},{label:'AMG GLC 43 3.0L',cylinders:6},{label:'AMG GLC 63 S 4.0L V8',cylinders:8}],
+    'GLE':[{label:'GLE 300d 2.0L',cylinders:4},{label:'GLE 350d 3.0L',cylinders:6},{label:'GLE 350 2.0L',cylinders:4},{label:'GLE 450 3.0L',cylinders:6},{label:'GLE 580 4.0L V8',cylinders:8},{label:'GLE 350e PHEV',cylinders:4},{label:'AMG GLE 53 3.0L',cylinders:6},{label:'AMG GLE 63 S 4.0L V8',cylinders:8}],
+    'GLS':[{label:'GLS 350d 3.0L',cylinders:6},{label:'GLS 400d 3.0L',cylinders:6},{label:'GLS 450 3.0L',cylinders:6},{label:'GLS 580 4.0L V8',cylinders:8},{label:'AMG GLS 63 4.0L V8',cylinders:8}],
+    'EQA':[{label:'EQA 250 Electric',cylinders:0},{label:'EQA 300 AWD Electric',cylinders:0}],
+    'EQC':[{label:'EQC 400 AWD Electric',cylinders:0}],
+    'EQS':[{label:'EQS 450 Electric',cylinders:0},{label:'EQS 450 AWD Electric',cylinders:0},{label:'AMG EQS 53 Electric',cylinders:0}],
+  },
+  'Toyota':{
+    'Yaris':[{label:'1.0L 3cyl',cylinders:3},{label:'1.5L 4cyl',cylinders:4},{label:'1.5L Hybrid',cylinders:4}],
+    'Corolla':[{label:'1.6L 4cyl',cylinders:4},{label:'1.8L 4cyl',cylinders:4},{label:'2.0L 4cyl',cylinders:4},{label:'1.8L Hybrid',cylinders:4},{label:'2.0L Hybrid',cylinders:4}],
+    'Camry':[{label:'2.5L 4cyl',cylinders:4},{label:'3.5L V6',cylinders:6},{label:'2.5L Hybrid',cylinders:4}],
+    'RAV4':[{label:'2.0L 4cyl',cylinders:4},{label:'2.5L 4cyl',cylinders:4},{label:'2.5L Hybrid',cylinders:4},{label:'2.5L PHEV',cylinders:4}],
+    'Highlander':[{label:'2.5L Hybrid',cylinders:4},{label:'3.5L V6',cylinders:6}],
+    '4Runner':[{label:'4.0L V6',cylinders:6}],
+    'Land Cruiser':[{label:'3.3L V6 Diesel Twin-Turbo',cylinders:6},{label:'3.5L V6 Twin-Turbo Petrol',cylinders:6},{label:'4.5L V8 Diesel',cylinders:8},{label:'4.6L V8 Petrol',cylinders:8}],
+    'Prius':[{label:'1.8L Hybrid',cylinders:4},{label:'2.0L PHEV',cylinders:4}],
+    'Supra':[{label:'2.0L 4cyl Turbo',cylinders:4},{label:'3.0L 6cyl Turbo',cylinders:6}],
+    'Tacoma':[{label:'2.7L 4cyl',cylinders:4},{label:'3.5L V6',cylinders:6}],
+    'Tundra':[{label:'3.5L V6 Twin-Turbo',cylinders:6},{label:'3.5L V6 Hybrid',cylinders:6}],
+    'GR86':[{label:'2.4L 4cyl Boxer',cylinders:4}],
+    'bZ4X':[{label:'FWD Electric',cylinders:0},{label:'AWD Electric',cylinders:0}],
+  },
+  'Honda':{
+    'Civic':[{label:'1.0L 3cyl Turbo',cylinders:3},{label:'1.5L 4cyl Turbo',cylinders:4},{label:'2.0L 4cyl',cylinders:4},{label:'Type R 2.0L Turbo',cylinders:4}],
+    'Accord':[{label:'1.5L 4cyl Turbo',cylinders:4},{label:'2.0L 4cyl Turbo',cylinders:4},{label:'2.0L Hybrid',cylinders:4}],
+    'HR-V':[{label:'1.5L 4cyl',cylinders:4},{label:'1.5L 4cyl Turbo',cylinders:4}],
+    'CR-V':[{label:'1.5L 4cyl Turbo',cylinders:4},{label:'2.0L Hybrid',cylinders:4},{label:'2.0L PHEV',cylinders:4}],
+    'Pilot':[{label:'3.5L V6',cylinders:6}],
+    'Odyssey':[{label:'3.5L V6',cylinders:6}],
+    'Fit':[{label:'1.3L 4cyl',cylinders:4},{label:'1.5L 4cyl',cylinders:4}],
+  },
+  'Ford':{
+    'Fiesta':[{label:'1.0L EcoBoost 3cyl',cylinders:3},{label:'1.1L 3cyl',cylinders:3},{label:'1.5L TDCi 4cyl',cylinders:4}],
+    'Focus':[{label:'1.0L EcoBoost 3cyl',cylinders:3},{label:'1.5L EcoBoost 4cyl',cylinders:4},{label:'2.0L ST',cylinders:4},{label:'2.3L RS',cylinders:4}],
+    'Mustang':[{label:'2.3L EcoBoost 4cyl',cylinders:4},{label:'5.0L V8',cylinders:8},{label:'Shelby GT350 5.2L V8',cylinders:8},{label:'Shelby GT500 5.2L V8',cylinders:8},{label:'Mach-E Electric',cylinders:0}],
+    'F-150':[{label:'3.3L V6',cylinders:6},{label:'2.7L EcoBoost V6',cylinders:6},{label:'3.5L EcoBoost V6',cylinders:6},{label:'5.0L V8',cylinders:8},{label:'3.5L PowerBoost Hybrid',cylinders:6},{label:'Lightning Electric',cylinders:0}],
+    'Ranger':[{label:'2.0L EcoBlue 4cyl',cylinders:4},{label:'2.3L EcoBoost 4cyl',cylinders:4},{label:'3.0L V6 Diesel',cylinders:6}],
+    'Bronco':[{label:'2.3L EcoBoost 4cyl',cylinders:4},{label:'2.7L EcoBoost V6',cylinders:6}],
+    'Explorer':[{label:'2.3L EcoBoost 4cyl',cylinders:4},{label:'3.0L EcoBoost V6',cylinders:6}],
+    'Escape':[{label:'1.5L EcoBoost 3cyl',cylinders:3},{label:'2.0L EcoBoost 4cyl',cylinders:4},{label:'2.5L PHEV',cylinders:4}],
+  },
+  'Volkswagen':{
+    'Polo':[{label:'1.0 TSI 3cyl 65ps',cylinders:3},{label:'1.0 TSI 3cyl 95ps',cylinders:3},{label:'1.5 TSI 4cyl',cylinders:4}],
+    'Golf':[{label:'1.0 TSI 3cyl',cylinders:3},{label:'1.5 TSI 4cyl',cylinders:4},{label:'2.0 TSI 4cyl',cylinders:4},{label:'1.6 TDI 4cyl',cylinders:4},{label:'2.0 TDI 4cyl',cylinders:4},{label:'1.4 GTE PHEV',cylinders:4},{label:'GTI 2.0 TSI',cylinders:4},{label:'R 2.0 TSI 4Motion',cylinders:4}],
+    'Tiguan':[{label:'1.5 TSI 4cyl',cylinders:4},{label:'2.0 TSI 4cyl',cylinders:4},{label:'2.0 TDI 4cyl',cylinders:4},{label:'1.4 eHybrid PHEV',cylinders:4}],
+    'T-Roc':[{label:'1.0 TSI 3cyl',cylinders:3},{label:'1.5 TSI 4cyl',cylinders:4},{label:'2.0 TDI 4cyl',cylinders:4},{label:'R 2.0 TSI',cylinders:4}],
+    'Passat':[{label:'1.5 TSI 4cyl',cylinders:4},{label:'2.0 TSI 4cyl',cylinders:4},{label:'2.0 TDI 4cyl',cylinders:4},{label:'1.4 GTE PHEV',cylinders:4}],
+    'Touareg':[{label:'3.0 TSI V6',cylinders:6},{label:'3.0 TDI V6',cylinders:6},{label:'eHybrid 3.0L V6',cylinders:6}],
+    'ID.3':[{label:'Pure Electric',cylinders:0},{label:'Pro Electric',cylinders:0}],
+    'ID.4':[{label:'Pure RWD Electric',cylinders:0},{label:'Pro RWD Electric',cylinders:0},{label:'GTX AWD Electric',cylinders:0}],
+    'ID.Buzz':[{label:'204hp Electric',cylinders:0},{label:'GTX AWD Electric',cylinders:0}],
+    'Amarok':[{label:'2.0 TDI 4cyl',cylinders:4},{label:'3.0 TDI V6',cylinders:6},{label:'3.0 V6 TSI',cylinders:6}],
+  },
+  'Porsche':{
+    '911':[{label:'Carrera 3.0L',cylinders:6},{label:'Carrera S 3.0L',cylinders:6},{label:'Carrera 4 3.0L',cylinders:6},{label:'Carrera 4S 3.0L',cylinders:6},{label:'GT3 4.0L',cylinders:6},{label:'GT3 RS 4.0L',cylinders:6},{label:'Turbo 3.8L',cylinders:6},{label:'Turbo S 3.8L',cylinders:6}],
+    '718':[{label:'Boxster 2.0L',cylinders:4},{label:'Boxster S 2.5L',cylinders:4},{label:'Cayman 2.0L',cylinders:4},{label:'Cayman S 2.5L',cylinders:4},{label:'GT4 4.0L',cylinders:6},{label:'Spyder 4.0L',cylinders:6},{label:'Boxster Electric',cylinders:0},{label:'Cayman Electric',cylinders:0}],
+    'Macan':[{label:'2.0L 4cyl',cylinders:4},{label:'S 2.9L V6',cylinders:6},{label:'GTS 2.9L V6',cylinders:6},{label:'Turbo 2.9L V6',cylinders:6},{label:'Electric RWD',cylinders:0},{label:'Electric Turbo AWD',cylinders:0}],
+    'Cayenne':[{label:'3.0L V6',cylinders:6},{label:'E-Hybrid V6 3.0L',cylinders:6},{label:'S 2.9L V6',cylinders:6},{label:'GTS 4.0L V8',cylinders:8},{label:'Turbo 4.0L V8',cylinders:8},{label:'Turbo S E-Hybrid 4.0L',cylinders:8}],
+    'Panamera':[{label:'2.9L V6',cylinders:6},{label:'4 2.9L V6',cylinders:6},{label:'GTS 4.0L V8',cylinders:8},{label:'Turbo 4.0L V8',cylinders:8},{label:'4 E-Hybrid 2.9L',cylinders:6},{label:'Turbo S E-Hybrid 4.0L',cylinders:8}],
+    'Taycan':[{label:'RWD Electric',cylinders:0},{label:'4S AWD Electric',cylinders:0},{label:'GTS AWD Electric',cylinders:0},{label:'Turbo AWD Electric',cylinders:0},{label:'Turbo S AWD Electric',cylinders:0}],
+  },
+  'Tesla':{
+    'Model 3':[{label:'Standard Range Electric',cylinders:0},{label:'Long Range AWD Electric',cylinders:0},{label:'Performance AWD Electric',cylinders:0}],
+    'Model S':[{label:'Long Range AWD Electric',cylinders:0},{label:'Plaid AWD Electric',cylinders:0}],
+    'Model X':[{label:'Long Range AWD Electric',cylinders:0},{label:'Plaid AWD Electric',cylinders:0}],
+    'Model Y':[{label:'Standard Range Electric',cylinders:0},{label:'Long Range AWD Electric',cylinders:0},{label:'Performance AWD Electric',cylinders:0}],
+    'Cybertruck':[{label:'AWD Electric',cylinders:0},{label:'Cyberbeast Electric',cylinders:0}],
+  },
+  'Land Rover':{
+    'Defender':[{label:'P300 2.0L 4cyl',cylinders:4},{label:'P400 3.0L 6cyl',cylinders:6},{label:'P500 5.0L V8',cylinders:8},{label:'D200 2.0L 4cyl Diesel',cylinders:4},{label:'D300 3.0L 6cyl Diesel',cylinders:6}],
+    'Range Rover':[{label:'P300 2.0L 4cyl',cylinders:4},{label:'P360 3.0L 6cyl',cylinders:6},{label:'P400 3.0L 6cyl',cylinders:6},{label:'P530 4.4L V8',cylinders:8},{label:'D250 3.0L 6cyl Diesel',cylinders:6},{label:'D350 3.0L 6cyl Diesel',cylinders:6},{label:'P460e PHEV',cylinders:6}],
+    'Range Rover Sport':[{label:'P300 2.0L 4cyl',cylinders:4},{label:'P360 3.0L 6cyl',cylinders:6},{label:'P400 3.0L 6cyl',cylinders:6},{label:'P530 4.4L V8',cylinders:8},{label:'D250 3.0L Diesel',cylinders:6},{label:'D350 3.0L Diesel',cylinders:6}],
+    'Range Rover Evoque':[{label:'P200 2.0L 4cyl',cylinders:4},{label:'P250 2.0L 4cyl',cylinders:4},{label:'D165 2.0L Diesel',cylinders:4},{label:'D200 2.0L Diesel',cylinders:4}],
+    'Discovery':[{label:'P300 2.0L 4cyl',cylinders:4},{label:'P360 3.0L 6cyl',cylinders:6},{label:'D250 3.0L 6cyl Diesel',cylinders:6},{label:'D300 3.0L 6cyl Diesel',cylinders:6}],
+    'Discovery Sport':[{label:'P200 2.0L 4cyl',cylinders:4},{label:'P250 2.0L 4cyl',cylinders:4},{label:'D165 2.0L Diesel',cylinders:4},{label:'D200 2.0L Diesel',cylinders:4}],
+  },
+  'Nissan':{
+    'Micra':[{label:'1.0 IG-T 3cyl',cylinders:3},{label:'1.0 IG-T 5cyl',cylinders:3}],
+    'Juke':[{label:'1.0 DIG-T 3cyl',cylinders:3},{label:'1.6 Hybrid',cylinders:4}],
+    'Qashqai':[{label:'1.3 DiG-T 4cyl',cylinders:4},{label:'1.5 e-Power Hybrid',cylinders:3}],
+    'X-Trail':[{label:'1.5 e-Power Hybrid',cylinders:3},{label:'1.3 DiG-T 4cyl',cylinders:4}],
+    'GT-R':[{label:'3.8L V6 Twin-Turbo',cylinders:6},{label:'Nismo 3.8L V6',cylinders:6}],
+    '370Z':[{label:'3.7L V6',cylinders:6}],
+    '400Z':[{label:'3.0L V6 Twin-Turbo',cylinders:6}],
+    'Altima':[{label:'2.5L 4cyl',cylinders:4},{label:'2.0L VC-Turbo',cylinders:4}],
+    'Rogue':[{label:'1.5L 3cyl Turbo',cylinders:3},{label:'2.5L 4cyl',cylinders:4}],
+    'Leaf':[{label:'40kWh Electric',cylinders:0},{label:'62kWh Electric',cylinders:0}],
+    'Ariya':[{label:'FWD Electric',cylinders:0},{label:'AWD Electric',cylinders:0}],
+  },
+  'Hyundai':{
+    'i10':[{label:'1.0L 3cyl',cylinders:3},{label:'1.2L 4cyl',cylinders:4}],
+    'i20':[{label:'1.0 T-GDI 3cyl',cylinders:3},{label:'1.2 MPI 4cyl',cylinders:4},{label:'N 1.6 T-GDI',cylinders:4}],
+    'i30':[{label:'1.0 T-GDI 3cyl',cylinders:3},{label:'1.5 T-GDI 4cyl',cylinders:4},{label:'2.0 N 4cyl',cylinders:4},{label:'1.6 CRDi 4cyl',cylinders:4}],
+    'Elantra':[{label:'2.0L 4cyl',cylinders:4},{label:'1.6L Turbo',cylinders:4},{label:'N 2.0T',cylinders:4}],
+    'Tucson':[{label:'1.6 T-GDI 4cyl',cylinders:4},{label:'2.0 MPI 4cyl',cylinders:4},{label:'1.6 HEV Hybrid',cylinders:4},{label:'1.6 PHEV',cylinders:4},{label:'2.0 CRDi Diesel',cylinders:4}],
+    'Santa Fe':[{label:'2.5 MPI 4cyl',cylinders:4},{label:'1.6 T-GDI Hybrid',cylinders:4},{label:'1.6 T-GDI PHEV',cylinders:4},{label:'2.2 CRDi Diesel',cylinders:4}],
+    'IONIQ 5':[{label:'Standard Range RWD',cylinders:0},{label:'Long Range RWD',cylinders:0},{label:'Long Range AWD',cylinders:0},{label:'N Performance AWD',cylinders:0}],
+    'IONIQ 6':[{label:'Standard Range RWD',cylinders:0},{label:'Long Range RWD',cylinders:0},{label:'Long Range AWD',cylinders:0}],
+    'Kona':[{label:'1.0 T-GDI 3cyl',cylinders:3},{label:'1.6 T-GDI 4cyl',cylinders:4},{label:'Electric',cylinders:0},{label:'N 2.0T',cylinders:4}],
+  },
+  'Kia':{
+    'Rio':[{label:'1.0 T-GDI 3cyl',cylinders:3},{label:'1.2 MPI 4cyl',cylinders:4},{label:'1.4 CRDi',cylinders:4}],
+    'Ceed':[{label:'1.0 T-GDI 3cyl',cylinders:3},{label:'1.5 T-GDI 4cyl',cylinders:4},{label:'1.6 CRDi 4cyl',cylinders:4}],
+    'Sportage':[{label:'1.6 T-GDI 4cyl',cylinders:4},{label:'2.0 MPI 4cyl',cylinders:4},{label:'1.6 HEV Hybrid',cylinders:4},{label:'1.6 PHEV',cylinders:4},{label:'2.0 CRDi Diesel',cylinders:4}],
+    'Sorento':[{label:'2.5 MPI 4cyl',cylinders:4},{label:'1.6 T-GDI Hybrid',cylinders:4},{label:'1.6 PHEV',cylinders:4},{label:'2.2 CRDi Diesel',cylinders:4}],
+    'Stinger':[{label:'2.0 T-GDI 4cyl',cylinders:4},{label:'3.3 T-GDI V6',cylinders:6}],
+    'EV6':[{label:'Standard Range RWD',cylinders:0},{label:'Long Range RWD',cylinders:0},{label:'Long Range AWD',cylinders:0},{label:'GT AWD',cylinders:0}],
+  },
+  'Subaru':{
+    'WRX':[{label:'WRX 2.4L Turbo Boxer',cylinders:4},{label:'WRX STI 2.5L Turbo Boxer',cylinders:4}],
+    'BRZ':[{label:'2.4L Boxer',cylinders:4}],
+    'Forester':[{label:'2.5L Boxer',cylinders:4},{label:'e-BOXER 2.0L Hybrid',cylinders:4}],
+    'Outback':[{label:'2.5L Boxer',cylinders:4},{label:'2.4L Turbo Boxer',cylinders:4}],
+    'Crosstrek':[{label:'2.0L Boxer',cylinders:4},{label:'2.5L Boxer',cylinders:4},{label:'PHEV',cylinders:4}],
+  },
+  'Lamborghini':{
+    'Huracán':[{label:'5.2L V10',cylinders:10},{label:'Evo 5.2L V10',cylinders:10},{label:'Sterrato 5.2L V10',cylinders:10}],
+    'Urus':[{label:'4.0L V8 Twin-Turbo',cylinders:8},{label:'Performante 4.0L V8',cylinders:8}],
+    'Aventador':[{label:'LP 700-4 6.5L V12',cylinders:12},{label:'SVJ 6.5L V12',cylinders:12}],
+    'Revuelto':[{label:'V12 6.5L Hybrid',cylinders:12}],
+  },
+  'Jaguar':{
+    'XE':[{label:'P250 2.0L 4cyl',cylinders:4},{label:'P300 2.0L 4cyl',cylinders:4},{label:'D180 2.0L Diesel',cylinders:4}],
+    'XF':[{label:'P250 2.0L 4cyl',cylinders:4},{label:'P300 2.0L 4cyl',cylinders:4},{label:'P380 3.0L V6',cylinders:6},{label:'D200 2.0L Diesel',cylinders:4},{label:'D300 3.0L Diesel',cylinders:6}],
+    'F-Pace':[{label:'P250 2.0L 4cyl',cylinders:4},{label:'P400 3.0L 6cyl',cylinders:6},{label:'P550 5.0L V8',cylinders:8},{label:'D200 2.0L Diesel',cylinders:4},{label:'P400e PHEV',cylinders:4}],
+    'F-Type':[{label:'P300 2.0L 4cyl',cylinders:4},{label:'P450 5.0L V8',cylinders:8},{label:'P575 R 5.0L V8',cylinders:8}],
+    'I-Pace':[{label:'EV400 AWD Electric',cylinders:0}],
+  },
+  'Mazda':{
+    'Mazda2':[{label:'1.5L 4cyl',cylinders:4}],
+    'Mazda3':[{label:'2.0L SkyActiv-G',cylinders:4},{label:'2.5L SkyActiv-G',cylinders:4},{label:'2.0L SkyActiv-X',cylinders:4},{label:'1.8L SkyActiv-D Diesel',cylinders:4}],
+    'Mazda6':[{label:'2.0L SkyActiv-G',cylinders:4},{label:'2.5L SkyActiv-G',cylinders:4},{label:'2.5L Turbo',cylinders:4},{label:'2.2L SkyActiv-D Diesel',cylinders:4}],
+    'CX-5':[{label:'2.0L SkyActiv-G',cylinders:4},{label:'2.5L SkyActiv-G',cylinders:4},{label:'2.5L Turbo',cylinders:4},{label:'2.2L SkyActiv-D Diesel',cylinders:4}],
+    'CX-60':[{label:'2.5L PHEV',cylinders:4},{label:'3.3L 6cyl Turbo',cylinders:6},{label:'3.3L 6cyl Diesel',cylinders:6}],
+    'MX-5':[{label:'1.5L 4cyl',cylinders:4},{label:'2.0L 4cyl',cylinders:4}],
+    'MX-30':[{label:'SkyActiv-G e-Skyactiv Hybrid',cylinders:4},{label:'Electric',cylinders:0}],
+  },
+  'Volvo':{
+    'S60':[{label:'T5 2.0L Turbo',cylinders:4},{label:'T8 Hybrid',cylinders:4},{label:'B4 Mild Hybrid',cylinders:4},{label:'B5 Mild Hybrid',cylinders:4}],
+    'V60':[{label:'B4 Mild Hybrid',cylinders:4},{label:'B5 Mild Hybrid',cylinders:4},{label:'T6 Hybrid',cylinders:4}],
+    'XC40':[{label:'T4 2.0L Turbo',cylinders:4},{label:'T5 2.0L Turbo',cylinders:4},{label:'Recharge P8 AWD Electric',cylinders:0},{label:'B4 Mild Hybrid',cylinders:4}],
+    'XC60':[{label:'B4 2.0L Mild Hybrid',cylinders:4},{label:'B5 2.0L Mild Hybrid',cylinders:4},{label:'B6 2.0L Mild Hybrid',cylinders:4},{label:'Recharge T6 PHEV',cylinders:4},{label:'Recharge T8 PHEV',cylinders:4}],
+    'XC90':[{label:'B5 2.0L Mild Hybrid',cylinders:4},{label:'B6 2.0L Mild Hybrid',cylinders:4},{label:'Recharge T8 PHEV',cylinders:4}],
+    'C40':[{label:'Recharge Electric',cylinders:0}],
+    'EX90':[{label:'Twin Motor AWD Electric',cylinders:0}],
+  },
+};
+
+function carEngineOptionsHtml(make, model, current) {
+  const engines = ((CAR_ENGINES[make] || {})[model] || []);
+  const inList = engines.some(e => e.label === current);
+  let html = `<option value="">${engines.length ? '-- Select Engine --' : '-- Select Model First --'}</option>`;
+  for (const e of engines) html += `<option value="${esc(e.label)}"${current===e.label?' selected':''}>${esc(e.label)}</option>`;
+  if (engines.length) html += `<option value="__other__"${current && !inList?' selected':''}>Other…</option>`;
+  return html;
+}
+function cylindersSelectHtml(current) {
+  const opts = [['','—'],['0','Electric'],['3','3'],['4','4'],['5','5'],['6','6'],['8','8'],['10','10'],['12','12']];
+  return opts.map(([v,l]) => `<option value="${v}"${current!=null && String(current)===v?' selected':''}>${l}</option>`).join('');
+}
+function getEngineValue() {
+  const sel = document.getElementById('f_engine');
+  const custom = document.getElementById('f_engine_custom');
+  if (!sel || sel.style.display === 'none') return (custom?.value || '').trim();
+  if (sel.value === '__other__') return (custom?.value || '').trim();
+  return sel.value;
+}
+function onEngineChange(sel) {
+  const isOther = sel.value === '__other__';
+  const custom = document.getElementById('f_engine_custom');
+  if (custom) custom.style.display = isOther ? '' : 'none';
+  if (!isOther && sel.value) {
+    const engines = ((CAR_ENGINES[getMakeValue()] || {})[getModelValue()] || []);
+    const eng = engines.find(e => e.label === sel.value);
+    if (eng) { const c = document.getElementById('f_cylinders'); if (c) c.value = String(eng.cylinders); }
+  }
+}
+function resetEngineDropdown(make, model) {
+  const engSel = document.getElementById('f_engine');
+  const engCustom = document.getElementById('f_engine_custom');
+  if (!engSel) return;
+  const engines = ((CAR_ENGINES[make] || {})[model] || []);
+  engSel.innerHTML = carEngineOptionsHtml(make, model, '');
+  engSel.style.display = engines.length ? '' : 'none';
+  if (engCustom) { engCustom.style.display = engines.length ? 'none' : ''; engCustom.value = ''; }
+  const cylSel = document.getElementById('f_cylinders');
+  if (cylSel) cylSel.value = '';
+}
+
 function makeBrandOptionsHtml(current) {
   const inList = CAR_BRANDS.includes(current);
   let html = '<option value="">-- Select Make --</option>';
@@ -879,10 +1123,14 @@ function onMakeChange(sel) {
     modelSel.style.display = '';
     if (modelCustom) modelCustom.style.display = 'none';
   }
+  resetEngineDropdown(make, '');
 }
 function onModelChange(sel) {
   const modelCustom = document.getElementById('f_model_custom');
   if (modelCustom) modelCustom.style.display = sel.value === '__other__' ? '' : 'none';
+  const make = getMakeValue();
+  const model = sel.value === '__other__' ? '' : sel.value;
+  resetEngineDropdown(make, model);
 }
 
 const state = {
@@ -986,6 +1234,8 @@ document.addEventListener('click', async (e) => {
     else if (action === 'submit-car-photo') submitCarPhoto(id);
     else if (action === 'delete-car-photo') deleteCarPhoto(id);
     else if (action === 'pick-suggested-photo') await pickSuggestedPhoto(id, target.dataset.url);
+    else if (action === 'suggest-ai-parts') await suggestPartsAI(id);
+    else if (action === 'accept-ai-part') await acceptAIPart(id, target.dataset.brand, target.dataset.pn);
     // Fuel actions
     else if (action === 'add-fuel') openAddFuelSheet();
     else if (action === 'submit-fuel') submitFuel();
@@ -1883,8 +2133,8 @@ function renderSettings(main) {
         <div class="card-arrow">⛽</div>
       </button>
       <button class="setting" data-action="refresh-schedule">
-        <div class="setting-text"><div class="setting-name">Refresh Audi Schedule</div><div class="setting-desc">Pull latest 2023 official intervals & part numbers</div></div>
-        <div class="card-arrow">↻</div>
+        <div class="setting-text"><div class="setting-name">Refresh Maintenance Schedule</div><div class="setting-desc">AI pulls official intervals & OEM part numbers for your car</div></div>
+        <div class="card-arrow">✦</div>
       </button>
 
       <div class="section-h"><div class="section-title">Export</div></div>
@@ -2129,6 +2379,17 @@ function openAddCarSheet() {
       </div>
       <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="0" inputmode="numeric"></div>
     </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Engine</label>
+        <select class="field-input" id="f_engine" onchange="onEngineChange(this)">${carEngineOptionsHtml('','','')}</select>
+        <input class="field-input" id="f_engine_custom" placeholder="e.g. 2.0L 4cyl Turbo" style="margin-top:6px;display:none" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Cylinders</label>
+        <select class="field-input" id="f_cylinders"><option value="">—</option><option value="0">Electric</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="8">8</option><option value="10">10</option><option value="12">12</option></select>
+      </div>
+    </div>
     <div class="field"><label class="field-label">Plate</label><input class="field-input" id="f_plate" autocomplete="off"></div>
     <div class="field"><label class="field-label">VIN</label><input class="field-input" id="f_vin" autocomplete="off"></div>
     <label class="field-checkbox"><input type="checkbox" id="f_seed"><span>Pre-load Audi A6 C8 schedule</span></label>
@@ -2147,6 +2408,8 @@ async function submitAddCar() {
       make: getMakeValue(),
       model: getModelValue(),
       year: getYearValue(),
+      engine: getEngineValue(),
+      cylinders: $('#f_cylinders').value !== '' ? parseInt($('#f_cylinders').value) : null,
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2172,6 +2435,9 @@ function openEditCarSheet(carId) {
   const models = makeIsOther ? [] : (CAR_MODELS[c.make] || []);
   const modelIsOther = !!c.model && models.length > 0 && !models.includes(c.model);
   const modelShowInput = !models.length && !!c.make;
+  const engines = makeIsOther ? [] : ((CAR_ENGINES[c.make] || {})[c.model] || []);
+  const engineIsOther = !!c.engine && engines.length > 0 && !engines.some(e => e.label === c.engine);
+  const engineShowInput = !engines.length;
   openSheet(`
     <div class="sheet-title">${esc(c.name)}</div>
     <div class="sheet-subtitle">Edit Vehicle</div>
@@ -2195,6 +2461,17 @@ function openEditCarSheet(carId) {
         <select class="field-input" id="f_year">${carYearOptionsHtml(c.year||'')}</select>
       </div>
       <div class="field"><label class="field-label">Trim</label><input class="field-input" id="f_trim" value="${esc(c.trim || '')}" placeholder="Premium" autocomplete="off"></div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">Engine</label>
+        <select class="field-input" id="f_engine" onchange="onEngineChange(this)" style="${engineShowInput?'display:none;':''}">${carEngineOptionsHtml(makeIsOther?'':(c.make||''), makeIsOther?'':(c.model||''), c.engine||'')}</select>
+        <input class="field-input" id="f_engine_custom" value="${(engineIsOther||engineShowInput)?esc(c.engine||''):''}" placeholder="e.g. 2.0L 4cyl Turbo" style="margin-top:6px;display:${(engineIsOther||engineShowInput)?'':'none'}" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Cylinders</label>
+        <select class="field-input" id="f_cylinders">${cylindersSelectHtml(c.cylinders)}</select>
+      </div>
     </div>
     <div class="field"><label class="field-label">Color</label><input class="field-input" id="f_color" value="${esc(c.color || '')}" placeholder="Daytona Grey Pearl" autocomplete="off"></div>
     <div class="field-row">
@@ -2231,6 +2508,8 @@ async function submitEditCar(carId) {
       make: getMakeValue(),
       model: getModelValue(),
       year: getYearValue(),
+      engine: getEngineValue(),
+      cylinders: $('#f_cylinders').value !== '' ? parseInt($('#f_cylinders').value) : null,
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2267,7 +2546,9 @@ async function submitDeleteCar(carId) {
   }
 }
 
-function renderPartsSection(parts, itemId) {
+function renderPartsSection(it, parts) {
+  const itemId = it.id;
+  const car = state.cars.find(c => c.id === state.currentCarId);
   const links = (pn) => {
     const q = encodeURIComponent(pn);
     return `<a class="btn-link" href="https://www.ebay.com/sch/i.html?_nkw=${q}&_sacat=6030" target="_blank" rel="noopener noreferrer">eBay</a>`
@@ -2275,16 +2556,28 @@ function renderPartsSection(parts, itemId) {
          + `<a class="btn-link" href="https://www.rockauto.com/en/partsearch/?partnum=${q}" target="_blank" rel="noopener noreferrer">RA</a>`
          + `<a class="btn-link" href="https://www.aliexpress.com/wholesale?SearchText=${q}" target="_blank" rel="noopener noreferrer">AliX</a>`;
   };
+  const oemLabel = esc(car?.make || 'OEM');
   return `
-    <div class="section-h" style="margin-bottom:10px;">
-      <div class="section-title">Part Options</div>
-      <div class="section-count">${parts.length}</div>
+    <div class="section-h" style="margin-bottom:10px;margin-top:4px;">
+      <div class="section-title">Part Numbers</div>
     </div>
-    ${parts.length === 0 ? `<div style="font-size:13px;color:var(--text-3);margin-bottom:10px;font-family:var(--mono);">No alternatives added</div>` : ''}
+
+    ${it.part_number ? `
+    <div class="part-alt" style="border-left:3px solid var(--accent);padding-left:10px;">
+      <div class="part-alt-info">
+        <span class="user-tag badge-oem">OEM</span>
+        <span class="part-alt-brand" style="font-weight:600;">${oemLabel}</span>
+        <span class="part-alt-pn">${esc(it.part_number)}</span>
+      </div>
+      <div class="part-alt-links">${links(it.part_number)}</div>
+    </div>
+    ` : `<div style="font-size:12px;color:var(--text-3);font-family:var(--mono);margin-bottom:8px;">No OEM part number — set one in the field above</div>`}
+
+    <div style="font-size:11px;letter-spacing:0.05em;color:var(--text-3);font-family:var(--mono);margin:12px 0 8px;">AFTERMARKET ALTERNATIVES</div>
+    ${parts.length === 0 ? `<div style="font-size:13px;color:var(--text-3);margin-bottom:8px;font-family:var(--mono);">None added yet</div>` : ''}
     ${parts.map(p => `
       <div class="part-alt">
         <div class="part-alt-info">
-          <span class="user-tag ${p.type === 'oem' ? 'badge-oem' : 'badge-afm'}">${p.type === 'oem' ? 'OEM' : 'AFM'}</span>
           <span class="part-alt-brand">${esc(p.brand)}</span>
           <span class="part-alt-pn">${esc(p.part_number)}</span>
         </div>
@@ -2294,13 +2587,13 @@ function renderPartsSection(parts, itemId) {
         </div>
       </div>
     `).join('')}
+
+    <button class="btn btn-ghost btn-block" data-action="suggest-ai-parts" data-id="${itemId}" style="margin-bottom:8px;">✦ Suggest from AI</button>
+    <div id="ai-parts-results-${itemId}" style="display:none;margin-bottom:10px;"></div>
+
     <div class="part-alt-add">
       <input class="field-input" id="alt_brand" placeholder="Brand" autocomplete="off" style="flex:1;min-width:90px;">
       <input class="field-input" id="alt_pn" placeholder="Part number" autocomplete="off" style="flex:1;min-width:100px;">
-      <select class="field-input" id="alt_type" style="flex:0 0 auto;">
-        <option value="aftermarket">AFM</option>
-        <option value="oem">OEM</option>
-      </select>
       <button class="btn btn-ghost" data-action="add-part" data-id="${itemId}" style="flex-shrink:0;">Add</button>
     </div>
   `;
@@ -2309,18 +2602,58 @@ function renderPartsSection(parts, itemId) {
 async function addPartAlt(itemId) {
   const brand = $('#alt_brand').value.trim();
   const pn = $('#alt_pn').value.trim();
-  const type = $('#alt_type').value;
   if (!brand || !pn) { toast('Enter brand and part number', 'bad'); return; }
   await api(`/api/items/${itemId}/parts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ brand, part_number: pn, type }),
+    body: JSON.stringify({ brand, part_number: pn, type: 'aftermarket' }),
   });
   openItemSheet(itemId);
 }
 
 async function delPartAlt(altId, itemId) {
   await api(`/api/parts/${altId}`, { method: 'DELETE' });
+  openItemSheet(itemId);
+}
+
+async function suggestPartsAI(itemId) {
+  const resultsDiv = document.getElementById(`ai-parts-results-${itemId}`);
+  const btn = document.querySelector(`[data-action="suggest-ai-parts"][data-id="${itemId}"]`);
+  if (!resultsDiv) return;
+  resultsDiv.style.display = 'block';
+  resultsDiv.innerHTML = '<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">Asking AI…</div>';
+  if (btn) btn.disabled = true;
+  try {
+    const suggestions = await api(`/api/items/${itemId}/ai-parts`, { method: 'POST' });
+    if (!suggestions.length) {
+      resultsDiv.innerHTML = '<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">No suggestions found for this item</div>';
+      return;
+    }
+    resultsDiv.innerHTML = `
+      <div style="font-size:11px;color:var(--accent);font-family:var(--mono);margin-bottom:6px;">AI SUGGESTIONS — verify part numbers before ordering</div>
+      ${suggestions.map(s => `
+        <div class="part-alt" style="background:var(--surface-hi);">
+          <div class="part-alt-info">
+            <span class="part-alt-brand">${esc(s.brand)}</span>
+            <span class="part-alt-pn">${esc(s.part_number)}</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-action="accept-ai-part" data-id="${itemId}"
+                  data-brand="${esc(s.brand)}" data-pn="${esc(s.part_number)}" style="flex-shrink:0;">+ Add</button>
+        </div>
+      `).join('')}`;
+  } catch (e) {
+    resultsDiv.innerHTML = `<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">${e.message?.includes('not configured') ? 'Add ANTHROPIC_API_KEY to docker-compose.yml to enable AI' : esc(e.message || 'Could not get suggestions')}</div>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function acceptAIPart(itemId, brand, pn) {
+  await api(`/api/items/${itemId}/parts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ brand, part_number: pn, type: 'aftermarket' }),
+  });
   openItemSheet(itemId);
 }
 
@@ -2357,7 +2690,7 @@ async function openItemSheet(itemId) {
 
     <button class="btn btn-ghost btn-block" data-action="save-intervals" data-id="${itemId}" style="margin-bottom:16px;">Save Item Settings</button>
 
-    ${renderPartsSection(parts, itemId)}
+    ${renderPartsSection(it, parts)}
 
     ${(it.next_due_km || it.next_due_date) ? `
       <div class="hero" style="margin-bottom:18px;">
@@ -2561,10 +2894,12 @@ async function saveIntervals(itemId) {
 }
 
 async function refreshSchedule() {
-  if (!confirm('Refresh schedule with latest official 2023 Audi A6 intervals and part numbers?\n\nYour service history will be preserved. Custom items you added won\'t be touched.')) return;
-  const result = await api(`/api/cars/${state.currentCarId}/refresh-audi-schedule`, { method: 'POST' });
+  const car = state.cars.find(c => c.id === state.currentCarId);
+  const desc = [car?.year, car?.make, car?.model, car?.engine].filter(Boolean).join(' ') || 'this vehicle';
+  if (!confirm(`Pull AI maintenance schedule for ${desc}?\n\nExisting service items will be updated with manufacturer intervals and OEM part numbers. Your service history and custom items are preserved.`)) return;
+  const result = await api(`/api/cars/${state.currentCarId}/ai-schedule`, { method: 'POST' });
   await loadCar();
-  toast(`Updated ${result.updated} · Added ${result.added}`, 'good');
+  toast(`Updated ${result.updated} · Added ${result.added} — ${result.total} items from AI`, 'good');
 }
 
 // ═══════════════════════════════════════════════════

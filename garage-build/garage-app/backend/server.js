@@ -230,10 +230,12 @@ app.put('/api/cars/:id', requireAuth, (req, res) => {
   const carId = parseInt(req.params.id);
   if (!userOwnsCar(carId, req.user.id)) return res.status(404).json({ error: 'Not found' });
   const { name, make, model, year, vin, plate, current_km, notes,
-          color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm } = req.body;
+          color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm,
+          engine, cylinders } = req.body;
   db.prepare(`
     UPDATE cars SET name=?, make=?, model=?, year=?, vin=?, plate=?, current_km=?, notes=?,
-                    color=?, trim=?, power_hp=?, torque_nm=?, tune_stage=?, tune_power_hp=?, tune_torque_nm=?
+                    color=?, trim=?, power_hp=?, torque_nm=?, tune_stage=?, tune_power_hp=?, tune_torque_nm=?,
+                    engine=?, cylinders=?
     WHERE id = ? AND user_id = ?
   `).run(name, make, model, year, vin, plate, current_km, notes,
          color || null, trim || null,
@@ -241,6 +243,8 @@ app.put('/api/cars/:id', requireAuth, (req, res) => {
          tune_stage || null,
          tune_power_hp != null ? tune_power_hp : null,
          tune_torque_nm != null ? tune_torque_nm : null,
+         engine || null,
+         cylinders !== '' && cylinders != null ? parseInt(cylinders) : null,
          carId, req.user.id);
   res.json(db.prepare(`SELECT * FROM cars WHERE id = ?`).get(carId));
 });
@@ -276,6 +280,109 @@ app.delete('/api/cars/:id/photo', requireAuth, (req, res) => {
   }
   db.prepare(`UPDATE cars SET photo_filename = NULL WHERE id = ?`).run(carId);
   res.json({ ok: true });
+});
+
+// ─── AI helpers ───────────────────────────────────────────────────────────────
+async function callClaude(systemPrompt, userPrompt, maxTokens = 3000) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured in docker-compose.yml');
+  const body = JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+  });
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(body),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) return reject(new Error(parsed.error.message));
+          resolve(parsed.content[0].text);
+        } catch (e) { reject(new Error('Failed to parse AI response')); }
+      });
+    });
+    req.on('error', reject);
+    req.write(body); req.end();
+  });
+}
+function extractJSON(text) {
+  const m = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/([\[{][\s\S]*[\]}])/);
+  return JSON.parse(m ? m[1] : text);
+}
+function mergeAISchedule(carId, items) {
+  const existing = db.prepare(`SELECT id, name_en FROM service_items WHERE car_id = ?`).all(carId);
+  const byName = new Map(existing.map(e => [e.name_en.toLowerCase().trim(), e.id]));
+  const updateStmt = db.prepare(`UPDATE service_items SET category=?, part_number=?, interval_km=?, interval_months=?, is_condition_based=?, notes=? WHERE id=?`);
+  const insertStmt = db.prepare(`INSERT INTO service_items (car_id, category, name_en, name_ar, part_number, interval_km, interval_months, is_condition_based, sort_order, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  let updated = 0, added = 0;
+  const txn = db.transaction(() => {
+    items.forEach((item, idx) => {
+      const key = (item.name_en || '').toLowerCase().trim();
+      const existingId = byName.get(key);
+      if (existingId) {
+        updateStmt.run(item.category || 'Routine', item.part_number || null, item.interval_km || null, item.interval_months || null, item.is_condition_based || 0, item.notes || null, existingId);
+        updated++;
+      } else {
+        const base = db.prepare(`SELECT COUNT(*) as c FROM service_items WHERE car_id=?`).get(carId).c;
+        insertStmt.run(carId, item.category || 'Routine', item.name_en, item.name_ar || null, item.part_number || null, item.interval_km || null, item.interval_months || null, item.is_condition_based || 0, base + idx, item.notes || null);
+        added++; byName.set(key, -1);
+      }
+    });
+  });
+  txn();
+  return { updated, added, total: items.length };
+}
+
+app.get('/api/ai/status', requireAuth, (req, res) => {
+  res.json({ configured: !!process.env.ANTHROPIC_API_KEY });
+});
+
+app.post('/api/cars/:id/ai-schedule', requireAuth, async (req, res) => {
+  const carId = parseInt(req.params.id);
+  if (!userOwnsCar(carId, req.user.id)) return res.status(404).json({ error: 'Not found' });
+  const car = db.prepare(`SELECT * FROM cars WHERE id = ?`).get(carId);
+  const desc = [car.year, car.make, car.model, car.engine, car.trim].filter(Boolean).join(' ');
+  if (!desc) return res.status(400).json({ error: 'Set at least make/model/year before refreshing' });
+  try {
+    const text = await callClaude(
+      'You are a certified automotive technician. Respond ONLY with valid JSON — no markdown, no explanations.',
+      `Generate the complete manufacturer maintenance schedule for: ${desc}.\n\nReturn a JSON array. Each item:\n{"category":"Routine"|"Ignition"|"Cooling"|"Brakes"|"Suspension"|"Gaskets"|"Tyres"|"Other","name_en":"item name","name_ar":"Arabic name or null","part_number":"OEM part number or null","interval_km":integer or null,"interval_months":integer or null,"is_condition_based":0 or 1,"notes":"brief note or null"}\n\nInclude: engine oil & filter, air filter, cabin filter, spark plugs (petrol only), brake fluid, coolant, transmission fluid, brake pads (front+rear), brake discs (front+rear), tyre rotation, wiper blades, battery, timing belt/chain inspection, and any model-specific items. Use official manufacturer intervals.`
+    );
+    const items = extractJSON(text);
+    if (!Array.isArray(items)) throw new Error('AI returned unexpected format');
+    res.json(mergeAISchedule(carId, items));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/items/:id/ai-parts', requireAuth, async (req, res) => {
+  const itemId = parseInt(req.params.id);
+  if (!userOwnsItem(itemId, req.user.id)) return res.status(404).json({ error: 'Not found' });
+  const item = db.prepare(`SELECT si.*, c.make, c.model, c.year, c.engine FROM service_items si JOIN cars c ON c.id = si.car_id WHERE si.id = ?`).get(itemId);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+  const carDesc = [item.year, item.make, item.model, item.engine].filter(Boolean).join(' ') || 'unknown vehicle';
+  try {
+    const text = await callClaude(
+      'You are an automotive parts expert. Respond ONLY with a valid JSON array — no markdown, no explanations.',
+      `For a ${carDesc}, the service item is: "${item.name_en}"${item.part_number ? ` (OEM: ${item.part_number})` : ''}.\n\nList 3-5 quality aftermarket alternatives from brands like Mahle, Mann-Filter, Hengst, Bosch, Valeo, NGK, Denso, ACDelco, Fram, Wix, Filtron, etc.\n\nReturn JSON: [{"brand":"Brand","part_number":"XXXXX"}]\n\nOnly include part numbers you are confident about. Return [] if uncertain.`,
+      1200
+    );
+    const parts = extractJSON(text);
+    if (!Array.isArray(parts)) throw new Error('Unexpected format');
+    res.json(parts.slice(0, 8));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Save car photo downloaded from a Wikimedia URL
