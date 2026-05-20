@@ -27,13 +27,15 @@ DATA_DIR=../../../garage node server.js
 ```
 The frontend has no build step — it's a single `frontend/index.html` served as static files.
 
+There is no test suite, no linter, and no formatter. The only npm script is `start`. Don't try to run `npm test` or `npm run lint`.
+
 ## Deployment (Production)
 
 The app is deployed to Unraid by pulling the pre-built image from GHCR:
 ```
 ghcr.io/umylive/garage:latest
 ```
-Every push to `main` that touches `garage-build/**` (or changes the workflow file itself) triggers `.github/workflows/docker-build.yml`, which builds and pushes a new image tagged `latest`, by SHA, and by timestamp. The workflow can also be triggered manually via `workflow_dispatch` in the GitHub Actions UI. The Unraid instance pulls the new image to update.
+Every push to `main` that touches `garage-build/**` (or changes the workflow file itself) triggers `.github/workflows/docker-build.yml`, which builds and pushes a new image tagged `latest`, by SHA, and by timestamp. The workflow targets `linux/amd64` only. It can also be triggered manually via `workflow_dispatch`. The Unraid instance pulls the new image to update.
 
 The `garage/` directory at the repo root holds the **live runtime database and uploads** — it is excluded from git via `.gitignore` and must never be committed.
 
@@ -42,30 +44,34 @@ The `garage/` directory at the repo root holds the **live runtime database and u
 ```
 garage-build/garage-app/
 ├── backend/
-│   ├── server.js      # All Express routes (~1100 lines)
+│   ├── server.js      # All Express routes (~1200 lines)
 │   ├── database.js    # SQLite schema, inline migrations, Audi A6 seed data
 │   └── auth.js        # bcrypt, session cookies, rate limiting middleware
 ├── frontend/
-│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~3300 lines)
-│   ├── sw.js          # Service worker (offline read-only caching)
+│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~3450 lines)
+│   ├── sw.js          # Service worker — stale-while-revalidate for static assets only; /api/ and /uploads/ are never cached
 │   └── manifest.json  # PWA manifest
-├── Dockerfile         # node:20-alpine, builds backend + copies frontend
+├── Dockerfile         # node:20-alpine + tini; builds backend + copies frontend
 └── docker-compose.yml # port 8765→3000, volume /mnt/user/appdata/garage:/data
 ```
+
+**DB driver**: `better-sqlite3` is **synchronous** — all `db.prepare(...).get/all/run()` calls are blocking. No `await` needed for DB access; async/await in routes is only used for outbound HTTP (AI calls, photo downloads).
 
 **Data flow**: SQLite at `$DATA_DIR/garage.db` (default `/data/garage.db`). Uploaded photos/receipts go to `$DATA_DIR/uploads/`.
 
 ## Key Architectural Patterns
 
-**Auth**: Cookie-based sessions (30-day, httpOnly). First user to `/api/auth/register` becomes admin; registration is then closed. Subsequent users must be created by an admin via `/api/users`. Rate limiting: 5 failed attempts → 15-min lockout per username+IP.
+**Auth**: Cookie-based sessions (30-day, httpOnly). First user to `/api/auth/register` becomes admin; registration is then closed. Subsequent users must be created by an admin via `/api/users`. Rate limiting: 5 failed attempts → 15-min lockout per username+IP. Note: the `README.md` has an outdated "no built-in authentication" note — auth is fully implemented via `auth.js`.
 
 **Authorization**: Every protected route checks ownership through join queries — `userOwnsCar(carId, userId)`, `userOwnsItem(itemId, userId)`, `userOwnsLog(logId, userId)`. All return 404 (not 403) to avoid leaking resource existence. For resources that don't have a dedicated helper (e.g. `DELETE /api/parts/:altId`), the same pattern is done inline with a 3-table join.
 
 **Service item status logic** (`server.js` — `GET /api/cars/:carId/items`): Computed at query time, not stored. Status is the worst of two independent checks — KM-based (`ok`/`never`/`due_soon`/`overdue`) and time-based (same). Thresholds: due_soon within 1500 km or 30 days; condition-based items always show `condition` status.
 
-**DB migrations**: Inline `migrate()` function in `database.js` runs on every startup using `PRAGMA table_info` to detect missing columns and `ALTER TABLE ADD COLUMN`. No migration framework. New tables use `CREATE TABLE IF NOT EXISTS` directly in the schema block. To add a new column: add it to the `migrate()` block with an `if (!colNames.includes('col_name'))` guard.
+**DB migrations**: Inline `migrate()` function in `database.js` runs on every startup using `PRAGMA table_info(cars)` to detect missing columns and `ALTER TABLE ADD COLUMN`. It only checks the `cars` table — new tables go in the `db.exec(...)` schema block as `CREATE TABLE IF NOT EXISTS`. To add a new column to `cars`: add an `if (!colNames.includes('col_name'))` guard in `migrate()`. Expired sessions and old login attempts are purged on startup and every hour by `cleanupSessions()`.
 
 **Audi A6 seed**: `seedAudiA6(carId)` inserts a full OEM maintenance schedule for the 2023 Audi A6 C8 45 TFSI. `refreshAudiA6Schedule(carId)` updates intervals/part numbers on an existing car by matching `name_en`, with a rename map for items that changed names. The AI schedule refresh (`POST /api/cars/:id/ai-schedule`) replaces this for all other cars using `mergeAISchedule()` in `server.js`, which applies the same name-matching merge logic.
+
+**Frontend state / routing**: There is no URL router. A single `state` object (`currentCarId`, `cars`, `items`, `tab`, `authStatus`) drives all rendering. Navigation is done by calling render functions (`renderCarList()`, `renderCarDetail()`, etc.) which overwrite `$('#root').innerHTML` directly. `state.currentCarId` (persisted to `localStorage`) is the only "route" — null means the car list, non-null means the detail view. `state.tab` controls the active tab (`'upcoming'`/`'all'`/`'fuel'`).
 
 **Frontend event handling**: A single delegated `document.addEventListener('click')` handles all UI actions via `data-action` attributes on elements. Adding a new action requires: (1) a `data-action="my-action"` on the HTML element, (2) an `else if (action === 'my-action')` branch in the handler, and (3) the corresponding async function. Extra data beyond `data-id` is passed via additional `data-*` attributes (e.g. `data-item-id`, `data-brand`, `data-pn`). There are 46+ action types covering cars, items, logs, fuel, templates, parts, photos, AI, settings, and user management.
 

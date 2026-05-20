@@ -200,7 +200,8 @@ app.get('/api/cars', requireAuth, (req, res) => {
 
 app.post('/api/cars', requireAuth, (req, res) => {
   const { name, make, model, year, vin, plate, current_km, notes, seed_audi,
-          color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm } = req.body;
+          color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm,
+          engine, cylinders, generation } = req.body;
 
   // Auto-fill Audi A6 C8 45 TFSI defaults if user picks the seed and didn't provide values
   const isAudiA6 = seed_audi || (
@@ -214,11 +215,15 @@ app.post('/api/cars', requireAuth, (req, res) => {
 
   const result = db.prepare(`
     INSERT INTO cars (user_id, name, make, model, year, vin, plate, current_km, notes,
-                      color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm,
+                      engine, cylinders, generation)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(req.user.id, name, make, model, year, vin, plate, current_km || 0, notes,
          finalColor, finalTrim, finalPowerHp, finalTorqueNm,
-         tune_stage || null, tune_power_hp || null, tune_torque_nm || null);
+         tune_stage || null, tune_power_hp || null, tune_torque_nm || null,
+         engine || null,
+         cylinders !== '' && cylinders != null ? parseInt(cylinders) : null,
+         generation || null);
 
   if (seed_audi) seedAudiA6(result.lastInsertRowid);
 
@@ -231,11 +236,11 @@ app.put('/api/cars/:id', requireAuth, (req, res) => {
   if (!userOwnsCar(carId, req.user.id)) return res.status(404).json({ error: 'Not found' });
   const { name, make, model, year, vin, plate, current_km, notes,
           color, trim, power_hp, torque_nm, tune_stage, tune_power_hp, tune_torque_nm,
-          engine, cylinders } = req.body;
+          engine, cylinders, generation } = req.body;
   db.prepare(`
     UPDATE cars SET name=?, make=?, model=?, year=?, vin=?, plate=?, current_km=?, notes=?,
                     color=?, trim=?, power_hp=?, torque_nm=?, tune_stage=?, tune_power_hp=?, tune_torque_nm=?,
-                    engine=?, cylinders=?
+                    engine=?, cylinders=?, generation=?
     WHERE id = ? AND user_id = ?
   `).run(name, make, model, year, vin, plate, current_km, notes,
          color || null, trim || null,
@@ -245,6 +250,7 @@ app.put('/api/cars/:id', requireAuth, (req, res) => {
          tune_torque_nm != null ? tune_torque_nm : null,
          engine || null,
          cylinders !== '' && cylinders != null ? parseInt(cylinders) : null,
+         generation || null,
          carId, req.user.id);
   res.json(db.prepare(`SELECT * FROM cars WHERE id = ?`).get(carId));
 });

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git ls-tree *)",
+      "Bash(git merge *)",
+      "Bash(git rm *)",
+      "Bash(Remove-Item -Recurse -Force \"C:\\\\Users\\\\OS\\\\Documents\\\\GitHub\\\\Garage\\\\.github\\\\workflows\\\\docker.yml\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\OS\\\\Documents\\\\GitHub\\\\Garage\\\\garage-build\\\\garage-app\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(dir \"garage-build\\\\\")",
+      "Bash(git commit *)",
+      "Bash(grep -n \"app\\\\\\\\.get\\\\|app\\\\\\\\.post\\\\|app\\\\\\\\.put\\\\|app\\\\\\\\.patch\\\\|app\\\\\\\\.delete\" \"C:\\\\Users\\\\OS\\\\Documents\\\\GitHub\\\\Garage\\\\garage-build\\\\garage-app\\\\backend\\\\server.js\")",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\OS\\\\Documents\\\\GitHub\\\\Garage\\\\garage-build\\\\garage-app\\\\backend\\\\server.js\"\\).Count; \\(Get-Content \"C:\\\\Users\\\\OS\\\\Documents\\\\GitHub\\\\Garage\\\\garage-build\\\\garage-app\\\\frontend\\\\index.html\"\\).Count)"
+    ]
+  }
+}

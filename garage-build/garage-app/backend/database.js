@@ -178,6 +178,10 @@ function migrate() {
     db.exec(`ALTER TABLE cars ADD COLUMN engine TEXT`);
     db.exec(`ALTER TABLE cars ADD COLUMN cylinders INTEGER`);
   }
+  if (!colNames.includes('generation')) {
+    console.log('🔄 Migrating: adding generation to cars');
+    db.exec(`ALTER TABLE cars ADD COLUMN generation TEXT`);
+  }
 }
 migrate();
 

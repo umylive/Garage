@@ -760,6 +760,7 @@ a { color: inherit; text-decoration: none; }
 
 <div class="toast" id="toast" role="status"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/auto-parts-db/dist/browser/auto-parts-db.min.js" defer></script>
 <script>
 'use strict';
 
@@ -1030,6 +1031,28 @@ const CAR_ENGINES = {
   },
 };
 
+// ─── auto-parts-db library helpers (CDN, with static fallback) ───────────────
+function libBrands() {
+  try { return window.AutoPartsDB ? AutoPartsDB.getBrands() : CAR_BRANDS; } catch(e) { return CAR_BRANDS; }
+}
+function libModels(make) {
+  try {
+    if (window.AutoPartsDB) {
+      const ms = AutoPartsDB.getModelsByBrand(make);
+      if (ms && ms.length) return ms.map(m => m.name);
+    }
+  } catch(e) {}
+  return CAR_MODELS[make] || [];
+}
+function libGenerations(make, model) {
+  try { if (window.AutoPartsDB) return AutoPartsDB.getGenerations(make, model) || []; } catch(e) {}
+  return [];
+}
+function libGenerationForYear(make, model, year) {
+  try { if (window.AutoPartsDB) return AutoPartsDB.getGenerationByYear(make, model, year); } catch(e) {}
+  return null;
+}
+
 function carEngineOptionsHtml(make, model, current) {
   const engines = ((CAR_ENGINES[make] || {})[model] || []);
   const inList = engines.some(e => e.label === current);
@@ -1072,14 +1095,15 @@ function resetEngineDropdown(make, model) {
 }
 
 function makeBrandOptionsHtml(current) {
-  const inList = CAR_BRANDS.includes(current);
+  const brands = libBrands();
+  const inList = brands.includes(current);
   let html = '<option value="">-- Select Make --</option>';
-  for (const b of CAR_BRANDS) html += `<option value="${esc(b)}"${current===b?' selected':''}>${esc(b)}</option>`;
+  for (const b of brands) html += `<option value="${esc(b)}"${current===b?' selected':''}>${esc(b)}</option>`;
   html += `<option value="__other__"${current && !inList?' selected':''}>Other…</option>`;
   return html;
 }
 function carModelOptionsHtml(make, current) {
-  const models = CAR_MODELS[make] || [];
+  const models = libModels(make);
   const inList = models.includes(current);
   let html = `<option value="">${models.length?'-- Select Model --':'-- Select Make First --'}</option>`;
   for (const m of models) html += `<option value="${esc(m)}"${current===m?' selected':''}>${esc(m)}</option>`;
@@ -1091,6 +1115,56 @@ function carYearOptionsHtml(current) {
   let html = '<option value="">-- Year --</option>';
   for (let y = new Date().getFullYear() + 1; y >= 1950; y--) html += `<option value="${y}"${cur===y?' selected':''}>${y}</option>`;
   return html;
+}
+function generationOptionsHtml(make, model, current) {
+  const gens = libGenerations(make, model);
+  if (!gens.length) return '<option value="">—</option>';
+  const inList = gens.some(g => g.name === current);
+  let html = '<option value="">-- Generation --</option>';
+  for (const g of gens) {
+    const label = `${g.name} (${g.yearFrom}–${g.yearTo || 'now'})`;
+    html += `<option value="${esc(g.name)}"${current===g.name?' selected':''}>${esc(label)}</option>`;
+  }
+  html += `<option value="__other__"${current && !inList?' selected':''}>Other…</option>`;
+  return html;
+}
+function getGenerationValue() {
+  const sel = document.getElementById('f_generation');
+  const custom = document.getElementById('f_generation_custom');
+  if (!sel || sel.style.display === 'none') return (custom?.value || '').trim();
+  if (sel.value === '__other__') return (custom?.value || '').trim();
+  return sel.value;
+}
+function onGenerationChange(sel) {
+  const custom = document.getElementById('f_generation_custom');
+  if (custom) custom.style.display = sel.value === '__other__' ? '' : 'none';
+}
+function updateGenerationDropdown(make, model) {
+  const genSel = document.getElementById('f_generation');
+  const genCustom = document.getElementById('f_generation_custom');
+  if (!genSel) return;
+  const gens = libGenerations(make, model);
+  genSel.innerHTML = generationOptionsHtml(make, model, '');
+  genSel.style.display = gens.length ? '' : 'none';
+  if (genCustom) genCustom.style.display = gens.length ? 'none' : '';
+  // Auto-fill from year if already selected
+  const year = getYearValue();
+  if (year && make && model) {
+    const g = libGenerationForYear(make, model, year);
+    if (g && genSel.style.display !== 'none') { genSel.value = g.name; if (genCustom) genCustom.style.display = 'none'; }
+  }
+}
+function onYearChange(sel) {
+  const make = getMakeValue();
+  const model = getModelValue();
+  if (!make || !model || !sel.value) return;
+  const g = libGenerationForYear(make, model, parseInt(sel.value));
+  const genSel = document.getElementById('f_generation');
+  const genCustom = document.getElementById('f_generation_custom');
+  if (g && genSel && genSel.style.display !== 'none') {
+    genSel.value = g.name;
+    if (genCustom) genCustom.style.display = 'none';
+  }
 }
 function getMakeValue() {
   const sel = document.getElementById('f_make');
@@ -1115,7 +1189,7 @@ function onMakeChange(sel) {
   const modelCustom = document.getElementById('f_model_custom');
   if (!modelSel) return;
   modelSel.innerHTML = carModelOptionsHtml(make, '');
-  const hasModels = (CAR_MODELS[make] || []).length > 0;
+  const hasModels = libModels(make).length > 0;
   if (!hasModels && make) {
     modelSel.style.display = 'none';
     if (modelCustom) { modelCustom.style.display = ''; modelCustom.value = ''; }
@@ -1124,6 +1198,7 @@ function onMakeChange(sel) {
     if (modelCustom) modelCustom.style.display = 'none';
   }
   resetEngineDropdown(make, '');
+  updateGenerationDropdown(make, '');
 }
 function onModelChange(sel) {
   const modelCustom = document.getElementById('f_model_custom');
@@ -1131,6 +1206,7 @@ function onModelChange(sel) {
   const make = getMakeValue();
   const model = sel.value === '__other__' ? '' : sel.value;
   resetEngineDropdown(make, model);
+  updateGenerationDropdown(make, model);
 }
 
 const state = {
@@ -1236,6 +1312,8 @@ document.addEventListener('click', async (e) => {
     else if (action === 'pick-suggested-photo') await pickSuggestedPhoto(id, target.dataset.url);
     else if (action === 'photo-page-prev') { _photoSuggest.page = Math.max(0, _photoSuggest.page - 1); renderPhotoSuggestPage(); }
     else if (action === 'photo-page-next') { const maxPage = Math.min(Math.ceil(_photoSuggest.urls.length / 6), 5) - 1; _photoSuggest.page = Math.min(maxPage, _photoSuggest.page + 1); renderPhotoSuggestPage(); }
+    else if (action === 'add-item') openAddItemSheet();
+    else if (action === 'submit-add-item') await submitAddItem();
     else if (action === 'suggest-ai-parts') await suggestPartsAI(id);
     else if (action === 'accept-ai-part') await acceptAIPart(id, target.dataset.brand, target.dataset.pn);
     // Fuel actions
@@ -1808,6 +1886,9 @@ function renderSchedule(main) {
       </div>
       ${grouped[cat].map(it => itemCard(it)).join('')}
     `).join('')}
+    <div style="margin:20px 0 8px;">
+      <button class="btn btn-ghost btn-block" data-action="add-item" style="opacity:0.7;font-size:14px;">+ Add Custom Item</button>
+    </div>
   `;
 
   $('#fab').style.display = 'grid';
@@ -2377,9 +2458,14 @@ function openAddCarSheet() {
     <div class="field-row">
       <div class="field">
         <label class="field-label">Year</label>
-        <select class="field-input" id="f_year">${carYearOptionsHtml('')}</select>
+        <select class="field-input" id="f_year" onchange="onYearChange(this)">${carYearOptionsHtml('')}</select>
       </div>
       <div class="field"><label class="field-label">Current km</label><input class="field-input" id="f_km" type="number" value="0" inputmode="numeric"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Generation</label>
+      <select class="field-input" id="f_generation" onchange="onGenerationChange(this)" style="display:none">${generationOptionsHtml('', '', '')}</select>
+      <input class="field-input" id="f_generation_custom" placeholder="e.g. C8, G20, Mk7… (auto-fills when make/model/year selected)" style="margin-top:0" autocomplete="off">
     </div>
     <div class="field-row">
       <div class="field">
@@ -2412,6 +2498,7 @@ async function submitAddCar() {
       year: getYearValue(),
       engine: getEngineValue(),
       cylinders: $('#f_cylinders').value !== '' ? parseInt($('#f_cylinders').value) : null,
+      generation: getGenerationValue() || null,
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2433,11 +2520,14 @@ async function submitAddCar() {
 function openEditCarSheet(carId) {
   const c = state.cars.find(x => x.id === carId);
   if (!c) return;
-  const makeIsOther = !!c.make && !CAR_BRANDS.includes(c.make);
-  const models = makeIsOther ? [] : (CAR_MODELS[c.make] || []);
+  const makeIsOther = !!c.make && !libBrands().includes(c.make);
+  const models = makeIsOther ? [] : libModels(c.make);
   const modelIsOther = !!c.model && models.length > 0 && !models.includes(c.model);
   const modelShowInput = !models.length && !!c.make;
   const engines = makeIsOther ? [] : ((CAR_ENGINES[c.make] || {})[c.model] || []);
+  const gens = (makeIsOther || !c.make) ? [] : libGenerations(c.make, c.model || '');
+  const genIsOther = !!c.generation && gens.length > 0 && !gens.some(g => g.name === c.generation);
+  const genShowInput = gens.length === 0 && !!c.generation;
   const engineIsOther = !!c.engine && engines.length > 0 && !engines.some(e => e.label === c.engine);
   const engineShowInput = !engines.length;
   openSheet(`
@@ -2460,9 +2550,14 @@ function openEditCarSheet(carId) {
     <div class="field-row">
       <div class="field">
         <label class="field-label">Year</label>
-        <select class="field-input" id="f_year">${carYearOptionsHtml(c.year||'')}</select>
+        <select class="field-input" id="f_year" onchange="onYearChange(this)">${carYearOptionsHtml(c.year||'')}</select>
       </div>
       <div class="field"><label class="field-label">Trim</label><input class="field-input" id="f_trim" value="${esc(c.trim || '')}" placeholder="Premium" autocomplete="off"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Generation</label>
+      <select class="field-input" id="f_generation" onchange="onGenerationChange(this)" style="${!gens.length?'display:none;':''}">${generationOptionsHtml(makeIsOther?'':(c.make||''), makeIsOther?'':(c.model||''), c.generation||'')}</select>
+      <input class="field-input" id="f_generation_custom" value="${(genIsOther||genShowInput)?esc(c.generation||''):''}" placeholder="e.g. C8, G20, Mk7…" style="margin-top:6px;display:${(genIsOther||genShowInput||!gens.length)?'':'none'}" autocomplete="off">
     </div>
     <div class="field-row">
       <div class="field">
@@ -2512,6 +2607,7 @@ async function submitEditCar(carId) {
       year: getYearValue(),
       engine: getEngineValue(),
       cylinders: $('#f_cylinders').value !== '' ? parseInt($('#f_cylinders').value) : null,
+      generation: getGenerationValue() || null,
       plate: $('#f_plate').value.trim(),
       vin: $('#f_vin').value.trim(),
       current_km: parseInt($('#f_km').value) || 0,
@@ -2657,6 +2753,67 @@ async function acceptAIPart(itemId, brand, pn) {
     body: JSON.stringify({ brand, part_number: pn, type: 'aftermarket' }),
   });
   openItemSheet(itemId);
+}
+
+function slugToName(slug) {
+  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+function searchPartsSuggest(q) {
+  const list = document.getElementById('ai_suggest_list');
+  if (!list) return;
+  if (!q.trim() || !window.AutoPartsDB) { list.style.display = 'none'; return; }
+  const results = AutoPartsDB.searchParts(q).slice(0, 12);
+  if (!results.length) { list.style.display = 'none'; return; }
+  list.style.display = '';
+  list.innerHTML = results.map(p => {
+    const name = slugToName(p.slug);
+    return `<button type="button" onclick="pickPartSuggest('${name.replace(/'/g,"\\'")}')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;color:var(--text);font-size:14px;cursor:pointer;border-bottom:1px solid var(--line);">${esc(name)}</button>`;
+  }).join('');
+}
+function pickPartSuggest(name) {
+  const inp = document.getElementById('ai_name');
+  if (inp) { inp.value = name; inp.focus(); }
+  const list = document.getElementById('ai_suggest_list');
+  if (list) list.style.display = 'none';
+}
+function openAddItemSheet() {
+  const cats = ['Filters','Engine','Fluids','Brakes','Tyres','Electrical','Suspension','Transmission','Cooling','Routine','Other'];
+  openSheet(`
+    <div class="sheet-title">Add Service Item</div>
+    <div class="sheet-subtitle">from Parts Database or custom</div>
+    <div class="field">
+      <label class="field-label">Item Name</label>
+      <input class="field-input" id="ai_name" placeholder="Search parts database…" autocomplete="off" oninput="searchPartsSuggest(this.value)">
+      <div id="ai_suggest_list" style="background:var(--surface-hi);border:1px solid var(--line);border-radius:10px;margin-top:4px;display:none;max-height:160px;overflow-y:auto;"></div>
+    </div>
+    <div class="field">
+      <label class="field-label">Category</label>
+      <select class="field-input" id="ai_cat">${cats.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="field-label">Interval (km)</label><input class="field-input" id="ai_km" type="number" placeholder="—" inputmode="numeric"></div>
+      <div class="field"><label class="field-label">Interval (months)</label><input class="field-input" id="ai_mo" type="number" placeholder="—" inputmode="numeric"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" data-action="close">Cancel</button>
+      <button class="btn btn-primary" data-action="submit-add-item">Add Item</button>
+    </div>
+  `);
+}
+async function submitAddItem() {
+  const name = (document.getElementById('ai_name')?.value || '').trim();
+  if (!name) { toast('Enter an item name', 'bad'); return; }
+  const cat = document.getElementById('ai_cat')?.value || 'Routine';
+  const km = parseInt(document.getElementById('ai_km')?.value) || null;
+  const mo = parseInt(document.getElementById('ai_mo')?.value) || null;
+  await api(`/api/cars/${state.currentCarId}/items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name_en: name, category: cat, interval_km: km, interval_months: mo }),
+  });
+  closeSheet();
+  await loadCar();
+  toast('Item added', 'good');
 }
 
 async function openItemSheet(itemId) {
