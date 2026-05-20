@@ -12,4 +12,3 @@ services:
       - TZ=Asia/Riyadh
       - PORT=3000
       - DATA_DIR=/data
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}

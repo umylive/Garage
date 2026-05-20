@@ -1305,7 +1305,7 @@ document.addEventListener('click', async (e) => {
     else if (action === 'pick-quick-log') { closeSheet(); setTimeout(() => openLogSheet(id), 250); }
     else if (action === 'open-photo') window.open(target.dataset.src, '_blank');
     else if (action === 'save-part-number') savePartNumber(id);
-    else if (action === 'refresh-schedule') refreshSchedule();
+
     else if (action === 'edit-car-photo') openCarPhotoSheet(id);
     else if (action === 'submit-car-photo') submitCarPhoto(id);
     else if (action === 'delete-car-photo') deleteCarPhoto(id);
@@ -1314,8 +1314,7 @@ document.addEventListener('click', async (e) => {
     else if (action === 'photo-page-next') { const maxPage = Math.min(Math.ceil(_photoSuggest.urls.length / 6), 5) - 1; _photoSuggest.page = Math.min(maxPage, _photoSuggest.page + 1); renderPhotoSuggestPage(); }
     else if (action === 'add-item') openAddItemSheet();
     else if (action === 'submit-add-item') await submitAddItem();
-    else if (action === 'suggest-ai-parts') await suggestPartsAI(id);
-    else if (action === 'accept-ai-part') await acceptAIPart(id, target.dataset.brand, target.dataset.pn);
+
     // Fuel actions
     else if (action === 'add-fuel') openAddFuelSheet();
     else if (action === 'submit-fuel') submitFuel();
@@ -2175,6 +2174,7 @@ function renderGarage(main) {
 
 function renderSettings(main) {
   const me = state.authStatus.user;
+  const car = state.cars.find(c => c.id === state.currentCarId);
 
   main.innerHTML = `
     <div class="section-h"><div class="section-title">Account</div></div>
@@ -2215,10 +2215,8 @@ function renderSettings(main) {
         <div class="setting-text"><div class="setting-name">Quick Fill-Up Log</div><div class="setting-desc">Add a fuel fill-up</div></div>
         <div class="card-arrow">⛽</div>
       </button>
-      <button class="setting" data-action="refresh-schedule">
-        <div class="setting-text"><div class="setting-name">Refresh Maintenance Schedule</div><div class="setting-desc">AI pulls official intervals & OEM part numbers for your car</div></div>
-        <div class="card-arrow">✦</div>
-      </button>
+
+      ${car?.vin ? `<a class="setting" href="https://partsouq.com/en/search/all?q=${encodeURIComponent(car.vin)}" target="_blank" rel="noopener noreferrer"><div class="setting-text"><div class="setting-name">Find OEM Parts by VIN</div><div class="setting-desc">Search PartSouq · ${esc(car.vin)}</div></div><div class="card-arrow">↗</div></a>` : ''}
 
       <div class="section-h"><div class="section-title">Export</div></div>
       <a class="setting" href="/api/cars/${state.currentCarId}/export.xlsx" download>
@@ -2652,7 +2650,8 @@ function renderPartsSection(it, parts) {
     return `<a class="btn-link" href="https://www.ebay.com/sch/i.html?_nkw=${q}&_sacat=6030" target="_blank" rel="noopener noreferrer">eBay</a>`
          + `<a class="btn-link" href="https://www.amazon.com/s?k=${q}" target="_blank" rel="noopener noreferrer">Amazon</a>`
          + `<a class="btn-link" href="https://www.rockauto.com/en/partsearch/?partnum=${q}" target="_blank" rel="noopener noreferrer">RA</a>`
-         + `<a class="btn-link" href="https://www.aliexpress.com/wholesale?SearchText=${q}" target="_blank" rel="noopener noreferrer">AliX</a>`;
+         + `<a class="btn-link" href="https://www.aliexpress.com/wholesale?SearchText=${q}" target="_blank" rel="noopener noreferrer">AliX</a>`
+         + `<a class="btn-link" href="https://partsouq.com/en/search/all?q=${q}" target="_blank" rel="noopener noreferrer">PartSouq</a>`;
   };
   const oemLabel = esc(car?.make || 'OEM');
   return `
@@ -2686,8 +2685,6 @@ function renderPartsSection(it, parts) {
       </div>
     `).join('')}
 
-    <button class="btn btn-ghost btn-block" data-action="suggest-ai-parts" data-id="${itemId}" style="margin-bottom:8px;">✦ Suggest from AI</button>
-    <div id="ai-parts-results-${itemId}" style="display:none;margin-bottom:10px;"></div>
 
     <div class="part-alt-add">
       <input class="field-input" id="alt_brand" placeholder="Brand" autocomplete="off" style="flex:1;min-width:90px;">
@@ -2714,46 +2711,6 @@ async function delPartAlt(altId, itemId) {
   openItemSheet(itemId);
 }
 
-async function suggestPartsAI(itemId) {
-  const resultsDiv = document.getElementById(`ai-parts-results-${itemId}`);
-  const btn = document.querySelector(`[data-action="suggest-ai-parts"][data-id="${itemId}"]`);
-  if (!resultsDiv) return;
-  resultsDiv.style.display = 'block';
-  resultsDiv.innerHTML = '<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">Asking AI…</div>';
-  if (btn) btn.disabled = true;
-  try {
-    const suggestions = await api(`/api/items/${itemId}/ai-parts`, { method: 'POST' });
-    if (!suggestions.length) {
-      resultsDiv.innerHTML = '<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">No suggestions found for this item</div>';
-      return;
-    }
-    resultsDiv.innerHTML = `
-      <div style="font-size:11px;color:var(--accent);font-family:var(--mono);margin-bottom:6px;">AI SUGGESTIONS — verify part numbers before ordering</div>
-      ${suggestions.map(s => `
-        <div class="part-alt" style="background:var(--surface-hi);">
-          <div class="part-alt-info">
-            <span class="part-alt-brand">${esc(s.brand)}</span>
-            <span class="part-alt-pn">${esc(s.part_number)}</span>
-          </div>
-          <button class="btn btn-ghost btn-sm" data-action="accept-ai-part" data-id="${itemId}"
-                  data-brand="${esc(s.brand)}" data-pn="${esc(s.part_number)}" style="flex-shrink:0;">+ Add</button>
-        </div>
-      `).join('')}`;
-  } catch (e) {
-    resultsDiv.innerHTML = `<div style="padding:6px 0;font-size:12px;color:var(--text-3);font-family:var(--mono);">${e.message?.includes('not configured') ? 'Add MISTRAL_API_KEY to docker-compose.yml to enable AI' : esc(e.message || 'Could not get suggestions')}</div>`;
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-
-async function acceptAIPart(itemId, brand, pn) {
-  await api(`/api/items/${itemId}/parts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ brand, part_number: pn, type: 'aftermarket' }),
-  });
-  openItemSheet(itemId);
-}
 
 function slugToName(slug) {
   return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -3052,19 +3009,6 @@ async function saveIntervals(itemId) {
   toast('Saved', 'good');
 }
 
-async function refreshSchedule() {
-  const car = state.cars.find(c => c.id === state.currentCarId);
-  const desc = [car?.year, car?.make, car?.model, car?.engine].filter(Boolean).join(' ') || 'this vehicle';
-  if (!confirm(`Pull AI maintenance schedule for ${desc}?\n\nExisting service items will be updated with manufacturer intervals and OEM part numbers. Your service history and custom items are preserved.`)) return;
-  toast('Asking AI… this may take 20–30 seconds', '', 0);
-  try {
-    const result = await api(`/api/cars/${state.currentCarId}/ai-schedule`, { method: 'POST' });
-    await loadCar();
-    toast(`Updated ${result.updated} · Added ${result.added} — ${result.total} items from AI`, 'good');
-  } catch (err) {
-    toast(err.message || 'AI schedule refresh failed', 'bad');
-  }
-}
 
 // ═══════════════════════════════════════════════════
 // FUEL TRACKING
