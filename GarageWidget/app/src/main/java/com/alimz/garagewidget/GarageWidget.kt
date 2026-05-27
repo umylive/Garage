@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.net.Uri
-import android.view.View
 import android.widget.RemoteViews
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -28,11 +27,10 @@ class GarageWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
             if (serverUrl.isEmpty() || token.isEmpty()) {
-                views.setTextViewText(R.id.widget_make, "")
-                views.setViewVisibility(R.id.widget_trim, View.GONE)
-                views.setTextViewText(R.id.widget_car_name, "Tap to set up widget")
+                views.setTextViewText(R.id.widget_car_name, "Tap to configure widget")
+                views.setTextViewText(R.id.widget_make, "Long-press → Edit widget")
                 views.setTextViewText(R.id.widget_odometer, "")
-                views.setTextViewText(R.id.widget_status, "Long-press → Edit widget")
+                views.setTextViewText(R.id.widget_status, "")
                 mgr.updateAppWidget(id, views)
                 return
             }
@@ -48,22 +46,19 @@ class GarageWidget : AppWidgetProvider() {
                 val dueSoonCount = json.getInt("due_soon_count")
                 val photoUrl = if (json.isNull("photo_url")) null else json.getString("photo_url")
 
-                views.setTextViewText(R.id.widget_make, make)
+                val makeLabel = listOfNotNull(
+                    make.ifEmpty { null },
+                    trim.ifEmpty { null }
+                ).joinToString(" · ")
+
                 views.setTextViewText(R.id.widget_car_name, model)
+                views.setTextViewText(R.id.widget_make, makeLabel)
                 views.setTextViewText(R.id.widget_odometer, "%,d km".format(km))
-
-                if (trim.isNotEmpty()) {
-                    views.setViewVisibility(R.id.widget_trim, View.VISIBLE)
-                    views.setTextViewText(R.id.widget_trim, trim)
-                } else {
-                    views.setViewVisibility(R.id.widget_trim, View.GONE)
-                }
-
                 views.setTextViewText(R.id.widget_status, when {
                     overdueCount > 0 && dueSoonCount > 0 -> "⚠ $overdueCount overdue · $dueSoonCount soon"
-                    overdueCount > 0 -> "⚠ $overdueCount service${if (overdueCount > 1) "s" else ""} overdue"
+                    overdueCount > 0 -> "⚠ $overdueCount overdue"
                     dueSoonCount > 0 -> "$dueSoonCount due soon"
-                    else -> "All services up to date"
+                    else -> "✓ Up to date"
                 })
 
                 if (photoUrl != null) {
@@ -84,11 +79,10 @@ class GarageWidget : AppWidgetProvider() {
                 views.setOnClickPendingIntent(R.id.widget_root, pi)
 
             } catch (e: Exception) {
-                views.setTextViewText(R.id.widget_make, "")
-                views.setViewVisibility(R.id.widget_trim, View.GONE)
                 views.setTextViewText(R.id.widget_car_name, "Update failed")
+                views.setTextViewText(R.id.widget_make, e.message?.take(60) ?: "Check server & token")
                 views.setTextViewText(R.id.widget_odometer, "")
-                views.setTextViewText(R.id.widget_status, e.message?.take(60) ?: "Check server & token")
+                views.setTextViewText(R.id.widget_status, "")
             }
 
             mgr.updateAppWidget(id, views)
