@@ -1131,7 +1131,7 @@ app.get('/api/widget/:token/photo', (req, res) => {
 // ─── Widget data (token-gated, no session needed) ───
 app.get('/api/widget/:token', (req, res) => {
   const row = db.prepare(`
-    SELECT wt.car_id, c.name, c.current_km, c.photo_filename
+    SELECT wt.car_id, c.name, c.make, c.model, c.trim, c.current_km, c.photo_filename
     FROM widget_tokens wt JOIN cars c ON c.id=wt.car_id WHERE wt.token=?
   `).get(req.params.token);
   if (!row) return res.status(404).json({ error: 'Invalid token' });
@@ -1169,6 +1169,9 @@ app.get('/api/widget/:token', (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.get('host');
   res.json({
     car_name: row.name,
+    car_make: row.make || '',
+    car_model: row.model || row.name,
+    car_trim: row.trim || '',
     current_km: row.current_km,
     photo_url: row.photo_filename ? `${proto}://${host}/api/widget/${req.params.token}/photo` : null,
     overdue_count: overdue.length,
