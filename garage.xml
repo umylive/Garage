@@ -24,7 +24,7 @@ Features:&#xD;
   <Category>Tools: Productivity:</Category>
   <WebUI>http://[IP]:[PORT:8765]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/umylive/Garage/main/garage.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/umylive/Garage/main/garage-build/garage-app/frontend/icon.svg</Icon>
+  <Icon>https://raw.githubusercontent.com/umylive/Garage/main/garage-build/garage-app/frontend/icon-source.png</Icon>
   <ExtraParams>--restart=unless-stopped</ExtraParams>
   <PostArgs/>
   <CPUset/>
