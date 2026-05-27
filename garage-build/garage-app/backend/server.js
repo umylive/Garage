@@ -1002,6 +1002,13 @@ app.get('/api/cars/:carId/export.pdf', requireAuth, (req, res) => {
   doc.end();
 });
 
+// ─── TWA asset links (must be served before auth middleware) ───
+const ASSET_LINKS = process.env.ASSET_LINKS_JSON || null;
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  if (!ASSET_LINKS) return res.status(404).json({ error: 'not configured' });
+  res.type('application/json').send(ASSET_LINKS);
+});
+
 // ─── Static frontend (public) ───
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('*', (req, res) => {

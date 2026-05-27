@@ -44,18 +44,18 @@ The `garage/` directory at the repo root holds the **live runtime database and u
 ```
 garage-build/garage-app/
 ├── backend/
-│   ├── server.js      # All Express routes (~1200 lines)
+│   ├── server.js      # All Express routes (~1015 lines)
 │   ├── database.js    # SQLite schema, inline migrations, Audi A6 seed data
 │   └── auth.js        # bcrypt, session cookies, rate limiting middleware
 ├── frontend/
-│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~3450 lines)
+│   ├── index.html     # Entire SPA — all UI in one vanilla JS file (~3506 lines)
 │   ├── sw.js          # Service worker — stale-while-revalidate for static assets only; /api/ and /uploads/ are never cached
 │   └── manifest.json  # PWA manifest
 ├── Dockerfile         # node:20-alpine + tini; builds backend + copies frontend
 └── docker-compose.yml # port 8765→3000, volume /mnt/user/appdata/garage:/data
 ```
 
-**DB driver**: `better-sqlite3` is **synchronous** — all `db.prepare(...).get/all/run()` calls are blocking. No `await` needed for DB access; async/await in routes is only used for outbound HTTP (AI calls, photo downloads).
+**DB driver**: `better-sqlite3` is **synchronous** — all `db.prepare(...).get/all/run()` calls are blocking. No `await` needed for DB access; async/await in routes is only used for outbound HTTP (photo-from-URL download).
 
 **Data flow**: SQLite at `$DATA_DIR/garage.db` (default `/data/garage.db`). Uploaded photos/receipts go to `$DATA_DIR/uploads/`.
 
@@ -79,11 +79,9 @@ garage-build/garage-app/
 
 **Dropdown + "Other" pattern**: Make, Model, and Engine fields use a `<select>` paired with a hidden `<input>` that appears when "Other…" is selected. Helper functions `getMakeValue()`, `getModelValue()`, `getEngineValue()` abstract reading the correct value. `onMakeChange(sel)` repopulates the Model select and resets Engine; `onModelChange(sel)` repopulates Engine. Static data lives in `CAR_BRANDS` (array), `CAR_MODELS` (make → model[]), and `CAR_ENGINES` (make → model → `{label, cylinders}[]`) constants at the top of the script block.
 
-**AI integration** (`server.js`): `callMistral(systemPrompt, userPrompt, maxTokens)` makes a direct HTTPS call to `api.mistral.ai/v1/chat/completions` using `mistral-small-latest`. `extractJSON(text)` strips markdown fences before `JSON.parse`. Requires `MISTRAL_API_KEY` env var — endpoints return a clear error message if it's missing. Used by two routes: `POST /api/cars/:id/ai-schedule` (full maintenance schedule) and `POST /api/items/:id/ai-parts` (aftermarket part alternatives).
-
 **Photo from URL** (`server.js`): `POST /api/cars/:id/photo-from-url` downloads an image from a Wikimedia URL server-side (validates `^https://upload\.wikimedia\.org/`), saves it to UPLOADS_DIR, and updates `cars.photo_filename`. The frontend `loadPhotoSuggestions(carId)` calls the Wikipedia and Wikimedia Commons APIs directly (CORS allowed) and populates a thumbnail grid; clicking a thumbnail triggers this backend download.
 
-**Part Numbers**: `service_items.part_number` is the OEM part number shown as the primary entry. `part_alternatives` stores aftermarket cross-references (brand, part_number, type). `renderPartsSection(it, parts)` takes the full item object (`it`) as its first argument — not just `itemId` — so it can display the OEM number and car context for the AI button.
+**Part Numbers**: `service_items.part_number` is the OEM part number shown as the primary entry. `part_alternatives` stores aftermarket cross-references (brand, part_number, type). `renderPartsSection(it, parts)` takes the full item object (`it`) as its first argument — not just `itemId` — so it can display the OEM number and car context.
 
 ## Environment Variables
 
@@ -92,7 +90,6 @@ garage-build/garage-app/
 | `PORT` | `3000` | Internal server port |
 | `DATA_DIR` | `/data` | SQLite DB + uploads root |
 | `TZ` | — | Timezone (docker-compose sets `Asia/Riyadh`) |
-| `MISTRAL_API_KEY` | — | Enables AI schedule refresh + AI part suggestions |
 
 ## Database Schema (tables)
 
@@ -106,7 +103,7 @@ garage-build/garage-app/
 
 `sessions` and `login_attempts` are auth-only, not linked to business data.
 
-Notable `cars` columns added via migration: `photo_filename`, `color`, `trim`, `power_hp`, `torque_nm`, `tune_stage`, `tune_power_hp`, `tune_torque_nm`, `engine`, `cylinders`.
+Notable `cars` columns added via migration: `photo_filename`, `color`, `trim`, `power_hp`, `torque_nm`, `tune_stage`, `tune_power_hp`, `tune_torque_nm`, `engine`, `cylinders`, `generation`.
 
 ## API Surface
 
@@ -120,13 +117,11 @@ All routes under `/api/`. Public: `GET /api/auth/status`, `POST /api/auth/regist
 
 **Part alternatives**: `GET|POST /api/items/:id/parts`, `DELETE /api/parts/:altId`
 
-**Logs**: `GET|POST /api/items/:id/logs`, `DELETE /api/logs/:id`, `POST /api/logs/:id/attachments`
+**Logs**: `GET|POST /api/items/:id/logs`, `DELETE /api/logs/:id`, `POST /api/logs/:id/attachments`, `DELETE /api/attachments/:id`
 
 **Fuel**: `GET|POST /api/cars/:carId/fuel`, `DELETE /api/fuel/:id`
 
-**Templates**: `GET|POST /api/cars/:carId/templates`, `DELETE /api/templates/:id`, `POST /api/templates/:id/apply`
-
-**AI**: `GET /api/ai/status`, `POST /api/cars/:id/ai-schedule`, `POST /api/items/:id/ai-parts`
+**Templates**: `GET|POST /api/cars/:carId/templates`, `PUT|DELETE /api/templates/:id`, `POST /api/templates/:id/apply`
 
 **Account**: `GET /api/account/me` (current user profile), `POST /api/account/password` (self-service password change)
 

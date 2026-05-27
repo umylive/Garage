@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Install build tools for better-sqlite3
-RUN apk add --no-cache python3 make g++ tini
+RUN apk add --no-cache python3 make g++ tini librsvg
 
 WORKDIR /app
 
@@ -10,6 +10,9 @@ RUN cd backend && npm install --production
 
 COPY backend ./backend
 COPY frontend ./frontend
+
+RUN rsvg-convert -w 192 -h 192 frontend/icon.svg -o frontend/icon-192.png \
+ && rsvg-convert -w 512 -h 512 frontend/icon.svg -o frontend/icon-512.png
 
 ENV NODE_ENV=production
 ENV PORT=3000
