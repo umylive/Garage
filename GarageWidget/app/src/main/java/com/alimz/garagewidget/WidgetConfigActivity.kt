@@ -35,7 +35,7 @@ class WidgetConfigActivity : AppCompatActivity() {
 
         // Pre-fill saved values
         val prefs = getSharedPreferences("gw_$appWidgetId", MODE_PRIVATE)
-        inputUrl.setText(prefs.getString("server_url", "https://garage.alimz.com"))
+        inputUrl.setText(prefs.getString("server_url", Constants.SERVER_URL))
         inputToken.setText(prefs.getString("token", ""))
 
         btnSave.setOnClickListener {
