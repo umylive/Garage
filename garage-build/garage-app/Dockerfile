@@ -11,8 +11,8 @@ RUN cd backend && npm install --production
 COPY backend ./backend
 COPY frontend ./frontend
 
-RUN convert frontend/icon-source.png -resize 512x512 frontend/icon-512.png \
- && convert frontend/icon-source.png -resize 192x192 frontend/icon-192.png
+RUN convert frontend/icon-source.png -resize 512x512! frontend/icon-512.png \
+ && convert frontend/icon-source.png -resize 192x192! frontend/icon-192.png
 
 ENV NODE_ENV=production
 ENV PORT=3000
