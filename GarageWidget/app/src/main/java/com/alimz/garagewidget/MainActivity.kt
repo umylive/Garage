@@ -3,7 +3,6 @@ package com.alimz.garagewidget
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -35,8 +34,6 @@ class MainActivity : AppCompatActivity() {
 
         // Match app's dark theme in status bar and nav bar
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.parseColor("#0a0e14")
-        window.navigationBarColor = Color.parseColor("#0a0e14")
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
