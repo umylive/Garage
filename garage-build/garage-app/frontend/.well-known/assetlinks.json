@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.alimz.garage.twa",
+    "sha256_cert_fingerprints": ["AC:8E:EB:E6:C2:11:BD:EA:7A:63:8D:FD:8D:0F:B0:7E:95:46:FC:FF:7E:3D:F8:02:97:EE:C4:AF:7A:26:C0:45"]
+  }
+}]

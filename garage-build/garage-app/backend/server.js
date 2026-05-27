@@ -1101,8 +1101,8 @@ setInterval(sendDailyNotifications, 24 * 60 * 60 * 1000);
 
 // ─── TWA asset links (must be served before auth middleware) ───
 const ASSET_LINKS = process.env.ASSET_LINKS_JSON || null;
-app.get('/.well-known/assetlinks.json', (req, res) => {
-  if (!ASSET_LINKS) return res.status(404).json({ error: 'not configured' });
+app.get('/.well-known/assetlinks.json', (req, res, next) => {
+  if (!ASSET_LINKS) return next();
   res.type('application/json').send(ASSET_LINKS);
 });
 
