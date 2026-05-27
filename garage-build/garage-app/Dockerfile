@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Install build tools for better-sqlite3
-RUN apk add --no-cache python3 make g++ tini
+RUN apk add --no-cache python3 make g++ tini imagemagick
 
 WORKDIR /app
 
@@ -10,9 +10,9 @@ RUN cd backend && npm install --production
 
 COPY backend ./backend
 COPY frontend ./frontend
-COPY generate-icons.js ./
 
-RUN node generate-icons.js
+RUN convert frontend/icon-source.png -resize 512x512 frontend/icon-512.png \
+ && convert frontend/icon-source.png -resize 192x192 frontend/icon-192.png
 
 ENV NODE_ENV=production
 ENV PORT=3000
