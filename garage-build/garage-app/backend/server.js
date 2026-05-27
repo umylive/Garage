@@ -7,6 +7,7 @@ const https = require('https');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const webpush = require('web-push');
+const crypto = require('crypto');
 const { db, seedAudiA6 } = require('./database');
 const auth = require('./auth');
 
@@ -1098,6 +1099,84 @@ async function sendDailyNotifications() {
 }
 setTimeout(sendDailyNotifications, 30 * 1000);
 setInterval(sendDailyNotifications, 24 * 60 * 60 * 1000);
+
+// ─── Widget token management ───
+app.post('/api/widget/token', requireAuth, (req, res) => {
+  const carId = parseInt(req.body.car_id);
+  if (!userOwnsCar(carId, req.user.id)) return res.status(404).json({ error: 'Not found' });
+  let row = db.prepare('SELECT token FROM widget_tokens WHERE user_id=? AND car_id=?').get(req.user.id, carId);
+  if (!row) {
+    const token = crypto.randomBytes(24).toString('hex');
+    db.prepare('INSERT INTO widget_tokens (token, user_id, car_id) VALUES (?,?,?)').run(token, req.user.id, carId);
+    row = { token };
+  }
+  res.json({ token: row.token });
+});
+
+app.delete('/api/widget/token', requireAuth, (req, res) => {
+  const carId = parseInt(req.body.car_id);
+  db.prepare('DELETE FROM widget_tokens WHERE user_id=? AND car_id=?').run(req.user.id, carId);
+  res.json({ ok: true });
+});
+
+// ─── Widget photo (token-gated, no session needed) ───
+app.get('/api/widget/:token/photo', (req, res) => {
+  const row = db.prepare('SELECT c.photo_filename FROM widget_tokens wt JOIN cars c ON c.id=wt.car_id WHERE wt.token=?').get(req.params.token);
+  if (!row || !row.photo_filename) return res.status(404).send('No photo');
+  const photoPath = path.join(UPLOADS_DIR, row.photo_filename);
+  if (!fs.existsSync(photoPath)) return res.status(404).send('Not found');
+  res.sendFile(photoPath);
+});
+
+// ─── Widget data (token-gated, no session needed) ───
+app.get('/api/widget/:token', (req, res) => {
+  const row = db.prepare(`
+    SELECT wt.car_id, c.name, c.current_km, c.photo_filename
+    FROM widget_tokens wt JOIN cars c ON c.id=wt.car_id WHERE wt.token=?
+  `).get(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Invalid token' });
+
+  const items = db.prepare(`
+    SELECT si.name_en, si.interval_km, si.interval_months, si.is_condition_based,
+      (SELECT json_object('service_date', sl.service_date, 'odometer_km', sl.odometer_km)
+       FROM service_log sl WHERE sl.service_item_id=si.id ORDER BY sl.odometer_km DESC LIMIT 1) AS last_json
+    FROM service_items si WHERE si.car_id=?
+  `).all(row.car_id);
+
+  const now = new Date();
+  const overdue = [], dueSoon = [];
+  for (const it of items) {
+    if (it.is_condition_based) continue;
+    const last = it.last_json ? JSON.parse(it.last_json) : null;
+    let status = 'ok';
+    if (it.interval_km) {
+      const remaining = (last ? last.odometer_km : 0) + it.interval_km - row.current_km;
+      if (remaining < 0) status = 'overdue';
+      else if (remaining < 1500) status = 'due_soon';
+    }
+    if (status !== 'overdue' && it.interval_months && last?.service_date) {
+      const due = new Date(last.service_date);
+      due.setMonth(due.getMonth() + it.interval_months);
+      const days = Math.floor((due - now) / 86400000);
+      if (days < 0) status = 'overdue';
+      else if (days < 30) status = 'due_soon';
+    }
+    if (status === 'overdue') overdue.push(it.name_en);
+    else if (status === 'due_soon') dueSoon.push(it.name_en);
+  }
+
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  res.json({
+    car_name: row.name,
+    current_km: row.current_km,
+    photo_url: row.photo_filename ? `${proto}://${host}/api/widget/${req.params.token}/photo` : null,
+    overdue_count: overdue.length,
+    due_soon_count: dueSoon.length,
+    overdue: overdue.slice(0, 3),
+    due_soon: dueSoon.slice(0, 3)
+  });
+});
 
 // ─── TWA asset links (must be served before auth middleware) ───
 const ASSET_LINKS = process.env.ASSET_LINKS_JSON || null;

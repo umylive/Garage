@@ -1345,6 +1345,8 @@ document.addEventListener('click', async (e) => {
     else if (action === 'delete-user') deleteUser(id);
     else if (action === 'enable-push') await enablePushNotifications();
     else if (action === 'disable-push') await disablePushNotifications();
+    else if (action === 'open-widget-token') await openWidgetTokenSheet();
+    else if (action === 'revoke-widget-token') await revokeWidgetToken();
   } catch (err) {
     if (err.message !== 'Not authenticated') {
       toast(err.message || 'Something went wrong', 'bad');
@@ -2272,6 +2274,14 @@ function renderSettings(main) {
       if (enabled) return `<button class="setting" data-action="disable-push"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">On — overdue service reminders</div></div><div class="card-arrow" style="color:var(--good);font-size:12px;font-weight:700;">ON</div></button>`;
       return `<button class="setting" data-action="enable-push"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">Get notified when services are overdue</div></div><div class="card-arrow">›</div></button>`;
     })()}
+
+    ${state.currentCarId ? `
+    <div class="section-h"><div class="section-title">Android Widget</div></div>
+    <button class="setting" data-action="open-widget-token">
+      <div class="setting-text"><div class="setting-name">Home Screen Widget</div><div class="setting-desc">Generate token for the widget APK</div></div>
+      <div class="card-arrow">›</div>
+    </button>
+    ` : ''}
 
     <div class="section-h"><div class="section-title">App</div></div>
     <div class="setting">
@@ -3536,6 +3546,57 @@ async function pickSuggestedPhoto(carId, url) {
   closeSheet();
   render();
   toast('Photo saved', 'good');
+}
+
+// ─── Android Widget ───────────────────────────────────
+async function openWidgetTokenSheet() {
+  openSheet('<div class="loading">Generating token…</div>');
+  try {
+    const { token } = await api('/api/widget/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ car_id: state.currentCarId })
+    });
+    const car = state.cars.find(c => c.id === state.currentCarId);
+    const serverUrl = window.location.origin;
+    openSheet(`
+      <div class="sheet-title">Android Widget</div>
+      <div class="sheet-subtitle">${esc(car?.name || 'Current car')}</div>
+      <div class="field">
+        <label class="field-label">Server URL</label>
+        <div style="display:flex;gap:8px;">
+          <input class="field-input" id="wgt_url" value="${esc(serverUrl)}" readonly style="flex:1;font-family:monospace;font-size:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText($('#wgt_url').value).then(()=>toast('Copied','good'))">Copy</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Widget Token</label>
+        <div style="display:flex;gap:8px;">
+          <input class="field-input" id="wgt_tok" value="${esc(token)}" readonly style="flex:1;font-family:monospace;font-size:11px;">
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText($('#wgt_tok').value).then(()=>toast('Copied','good'))">Copy</button>
+        </div>
+      </div>
+      <div style="background:var(--card);border-radius:10px;padding:14px;font-size:13px;color:var(--text-2);line-height:1.7;">
+        1. Build &amp; install the Garage Widget APK<br>
+        2. Long-press home screen → Widgets → Garage Widget<br>
+        3. Paste the Server URL and Token above
+      </div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-ghost btn-sm" style="color:var(--bad);" data-action="revoke-widget-token">Revoke Token</button>
+        <button class="btn btn-ghost" data-action="close">Done</button>
+      </div>
+    `);
+  } catch (err) {
+    toast('Failed to generate token', 'bad'); closeSheet();
+  }
+}
+
+async function revokeWidgetToken() {
+  await api('/api/widget/token', {
+    method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ car_id: state.currentCarId })
+  });
+  toast('Widget token revoked', 'good');
+  closeSheet();
 }
 
 // ─── Push Notifications ───────────────────────────────

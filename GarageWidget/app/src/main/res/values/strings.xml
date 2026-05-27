@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Garage Widget</string>
+    <string name="widget_description">Shows your car status, odometer, and overdue services</string>
+    <string name="config_subtitle">Set up your home screen widget</string>
+    <string name="label_server_url">SERVER URL</string>
+    <string name="label_token">WIDGET TOKEN</string>
+    <string name="hint_token">Paste token from Garage app → Settings → Widget</string>
+    <string name="token_hint">Open the Garage web app → Settings → Android Widget → Generate Token, then paste it above.</string>
+    <string name="btn_add">Add Widget</string>
+    <string name="car_photo">Car photo</string>
+</resources>

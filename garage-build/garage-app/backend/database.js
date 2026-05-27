@@ -165,6 +165,17 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
   CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
+
+  CREATE TABLE IF NOT EXISTS widget_tokens (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    car_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE,
+    UNIQUE (user_id, car_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_widget_car ON widget_tokens(car_id);
 `);
 
 // ─── Migration: add user_id column to existing cars table if missing ───
