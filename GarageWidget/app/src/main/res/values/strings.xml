@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Garage Widget</string>
+    <string name="app_name">Garage</string>
     <string name="widget_description">Shows your car status, odometer, and overdue services</string>
     <string name="config_subtitle">Set up your home screen widget</string>
     <string name="label_server_url">SERVER URL</string>
