@@ -13,6 +13,7 @@
     "exceljs": "^4.4.0",
     "pdfkit": "^0.15.0",
     "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6"
+    "cookie-parser": "^1.4.6",
+    "web-push": "^3.6.7"
   }
 }

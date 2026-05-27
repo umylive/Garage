@@ -6,6 +6,7 @@ const fs = require('fs');
 const https = require('https');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+const webpush = require('web-push');
 const { db, seedAudiA6 } = require('./database');
 const auth = require('./auth');
 
@@ -16,6 +17,25 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 app.set('trust proxy', true); // for correct IP behind reverse proxies
+
+// ─── VAPID keys (auto-generated on first run, stored in DB) ───
+function initVapid() {
+  const pub = db.prepare("SELECT value FROM app_settings WHERE key='vapid_public'").get();
+  if (pub) {
+    webpush.setVapidDetails('mailto:noreply@garage.local',
+      pub.value,
+      db.prepare("SELECT value FROM app_settings WHERE key='vapid_private'").get().value
+    );
+    return pub.value;
+  }
+  const keys = webpush.generateVAPIDKeys();
+  db.prepare("INSERT INTO app_settings (key,value) VALUES ('vapid_public',?)").run(keys.publicKey);
+  db.prepare("INSERT INTO app_settings (key,value) VALUES ('vapid_private',?)").run(keys.privateKey);
+  webpush.setVapidDetails('mailto:noreply@garage.local', keys.publicKey, keys.privateKey);
+  console.log('🔔 Generated VAPID keys for push notifications');
+  return keys.publicKey;
+}
+const VAPID_PUBLIC_KEY = initVapid();
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
@@ -1001,6 +1021,83 @@ app.get('/api/cars/:carId/export.pdf', requireAuth, (req, res) => {
 
   doc.end();
 });
+
+// ─── Push Notifications ───
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+app.post('/api/push/subscribe', requireAuth, (req, res) => {
+  const { endpoint, keys } = req.body;
+  if (!endpoint || !keys?.p256dh || !keys?.auth) return res.status(400).json({ error: 'Invalid subscription' });
+  db.prepare(`
+    INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET user_id=excluded.user_id, p256dh=excluded.p256dh, auth=excluded.auth
+  `).run(req.user.id, endpoint, keys.p256dh, keys.auth);
+  res.json({ ok: true });
+});
+
+app.delete('/api/push/unsubscribe', requireAuth, (req, res) => {
+  const { endpoint } = req.body;
+  db.prepare(`DELETE FROM push_subscriptions WHERE user_id=? AND endpoint=?`).run(req.user.id, endpoint);
+  res.json({ ok: true });
+});
+
+// ─── Daily overdue notification scheduler ───
+async function sendDailyNotifications() {
+  const today = new Date().toISOString().slice(0, 10);
+  const subs = db.prepare(
+    `SELECT * FROM push_subscriptions WHERE last_notified_date IS NULL OR last_notified_date < ?`
+  ).all(today);
+  if (!subs.length) return;
+
+  const now = new Date();
+  for (const sub of subs) {
+    const cars = db.prepare(`SELECT id, name, current_km FROM cars WHERE user_id=? AND is_active=1`).all(sub.user_id);
+    const overdue = [];
+    for (const car of cars) {
+      const items = db.prepare(`
+        SELECT si.name_en, si.interval_km, si.interval_months,
+          (SELECT json_object('service_date', sl.service_date, 'odometer_km', sl.odometer_km)
+           FROM service_log sl WHERE sl.service_item_id=si.id ORDER BY sl.odometer_km DESC LIMIT 1) AS last_json
+        FROM service_items si WHERE si.car_id=? AND si.is_condition_based=0
+      `).all(car.id);
+      for (const it of items) {
+        const last = it.last_json ? JSON.parse(it.last_json) : null;
+        let isOverdue = false;
+        if (it.interval_km) {
+          const baseKm = last ? last.odometer_km : 0;
+          if ((baseKm + it.interval_km - car.current_km) < 0) isOverdue = true;
+        }
+        if (!isOverdue && it.interval_months && last?.service_date) {
+          const due = new Date(last.service_date);
+          due.setMonth(due.getMonth() + it.interval_months);
+          if (due < now) isOverdue = true;
+        }
+        if (isOverdue) overdue.push(`${car.name}: ${it.name_en}`);
+      }
+    }
+    db.prepare(`UPDATE push_subscriptions SET last_notified_date=? WHERE id=?`).run(today, sub.id);
+    if (!overdue.length) continue;
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify({
+          title: `${overdue.length} service${overdue.length > 1 ? 's' : ''} overdue`,
+          body: overdue.slice(0, 3).join('\n') + (overdue.length > 3 ? `\n+${overdue.length - 3} more` : ''),
+          url: '/'
+        })
+      );
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        db.prepare(`DELETE FROM push_subscriptions WHERE id=?`).run(sub.id);
+      }
+    }
+  }
+}
+setTimeout(sendDailyNotifications, 30 * 1000);
+setInterval(sendDailyNotifications, 24 * 60 * 60 * 1000);
 
 // ─── TWA asset links (must be served before auth middleware) ───
 const ASSET_LINKS = process.env.ASSET_LINKS_JSON || null;

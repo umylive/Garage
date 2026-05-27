@@ -1343,6 +1343,8 @@ document.addEventListener('click', async (e) => {
     else if (action === 'reset-user-password') openResetUserPasswordSheet(id);
     else if (action === 'submit-reset-user-password') submitResetUserPassword(id);
     else if (action === 'delete-user') deleteUser(id);
+    else if (action === 'enable-push') await enablePushNotifications();
+    else if (action === 'disable-push') await disablePushNotifications();
   } catch (err) {
     if (err.message !== 'Not authenticated') {
       toast(err.message || 'Something went wrong', 'bad');
@@ -1562,6 +1564,13 @@ async function initApp() {
   await loadCar();
   $('#carPill').style.display = '';
   renderCarPicker();
+
+  // Handle home-screen shortcuts (manifest shortcuts member)
+  const shortcut = new URLSearchParams(window.location.search).get('shortcut');
+  if (shortcut && state.currentCarId) {
+    if (shortcut === 'fuel') setTimeout(() => openAddFuelSheet(), 300);
+    else if (shortcut === 'service') switchTab('upcoming');
+  }
 }
 
 function renderCarPicker() {
@@ -2228,6 +2237,16 @@ function renderSettings(main) {
         <div class="card-arrow">↓</div>
       </a>
     ` : ''}
+
+    <div class="section-h"><div class="section-title">Notifications</div></div>
+    ${(() => {
+      const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      if (!supported) return `<div class="setting"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">Not supported in this browser</div></div></div>`;
+      if (Notification.permission === 'denied') return `<div class="setting"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">Blocked — allow in browser settings</div></div></div>`;
+      const enabled = Notification.permission === 'granted' && !!localStorage.getItem('pushEndpoint');
+      if (enabled) return `<button class="setting" data-action="disable-push"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">On — overdue service reminders</div></div><div class="card-arrow" style="color:var(--good);font-size:12px;font-weight:700;">ON</div></button>`;
+      return `<button class="setting" data-action="enable-push"><div class="setting-text"><div class="setting-name">Push Notifications</div><div class="setting-desc">Get notified when services are overdue</div></div><div class="card-arrow">›</div></button>`;
+    })()}
 
     <div class="section-h"><div class="section-title">App</div></div>
     <div class="setting">
@@ -3492,6 +3511,48 @@ async function pickSuggestedPhoto(carId, url) {
   closeSheet();
   render();
   toast('Photo saved', 'good');
+}
+
+// ─── Push Notifications ───────────────────────────────
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const b = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...b].map(c => c.charCodeAt(0)));
+}
+
+async function enablePushNotifications() {
+  if (!('PushManager' in window)) { toast('Not supported in this browser', 'bad'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { toast('Permission denied', 'bad'); return; }
+  try {
+    const { publicKey } = await api('/api/push/vapid-public-key');
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
+    await api('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub.toJSON()) });
+    localStorage.setItem('pushEndpoint', sub.endpoint);
+    toast('Notifications enabled', 'good');
+    render();
+  } catch (err) {
+    toast('Failed to enable notifications', 'bad');
+    console.error('[push]', err);
+  }
+}
+
+async function disablePushNotifications() {
+  try {
+    const endpoint = localStorage.getItem('pushEndpoint');
+    if (endpoint) {
+      await api('/api/push/unsubscribe', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint }) });
+    }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+    localStorage.removeItem('pushEndpoint');
+    toast('Notifications disabled', 'good');
+    render();
+  } catch (err) {
+    toast('Failed to disable notifications', 'bad');
+  }
 }
 
 if ('serviceWorker' in navigator) {
