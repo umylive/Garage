@@ -1593,11 +1593,36 @@ async function loadCar() {
   render();
 }
 
+const TAB_ORDER = ['upcoming', 'schedule', 'due', 'fuel', 'history', 'garage', 'settings'];
+
 function switchTab(tab) {
   state.tab = tab;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  // Scroll the active tab into view in the nav bar
+  const activeTab = document.querySelector('.tab.active');
+  if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   render();
 }
+
+// ─── Swipe left/right to navigate tabs ───
+(function initSwipe() {
+  let startX = 0, startY = 0, moved = false;
+  document.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, { passive: true });
+  document.addEventListener('touchmove', () => { moved = true; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!moved) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = TAB_ORDER.indexOf(state.tab);
+    if (dx < 0 && idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]); // swipe left → next
+    else if (dx > 0 && idx > 0) switchTab(TAB_ORDER[idx - 1]);               // swipe right → prev
+  }, { passive: true });
+})();
 
 function lampClass(status) {
   return ({ ok: 'lamp-good', due_soon: 'lamp-warn', overdue: 'lamp-bad', never: 'lamp-off', condition: 'lamp-purple' })[status] || 'lamp-off';
